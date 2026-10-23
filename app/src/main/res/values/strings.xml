@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">GradeTrack</string>
+    <string name="gradetrack">GRADETRACK</string>
+    <string name="class_schedule">Class Schedule</string>
+    <string name="academic_term">Academic Term 2026–2027</string>
+    <string name="manage_schedule">Manage Schedule</string>
+    <string name="timetable_room_assignment">Timetable &amp; Room Assignment</string>
+    <string name="back">Back</string>
+    <string name="add_schedule_entry">Add Schedule Entry</string>
+    <string name="schedule_directory">SCHEDULE DIRECTORY</string>
+    <string name="time_day">TIME &amp; DAY</string>
+    <string name="subject">SUBJECT</string>
+    <string name="room">ROOM</string>
+    <string name="instructor">INSTRUCTOR</string>
+</resources>

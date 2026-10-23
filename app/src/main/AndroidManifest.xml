@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.GradeTrack">
+
+        <!-- Launcher -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".CreateAccountActivity" android:exported="false" />
+
+        <!-- Dashboards -->
+        <activity android:name=".StudentDashboardActivity" android:exported="false" />
+        <activity android:name=".FacultyDashboardActivity" android:exported="false" />
+
+        <!-- Faculty screens -->
+        <activity android:name=".ManageScheduleActivity" android:exported="false" />
+        <!-- Add any others you have, e.g. ManageStudentsActivity,
+             ManageSubjectsActivity, ManageGradesActivity -->
+
+        <!-- Student screens -->
+        <activity android:name=".StudentGradesActivity" android:exported="false" />
+        <activity android:name=".StudentScheduleActivity" android:exported="false" />
+        <activity android:name=".StudentProfileActivity" android:exported="false" />
+
+        <!-- Faculty screens -->
+        <activity android:name=".GradeManagementActivity" android:exported="false" />
+        <activity android:name=".ManageStudentsActivity" android:exported="false" />
+        <activity android:name=".ManageSubjectsActivity" android:exported="false" />
+    </application>
+
+</manifest>

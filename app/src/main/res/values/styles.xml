@@ -1,0 +1,31 @@
+<resources>
+    <!-- Primary Filled Navy Button with Shadow & Padding -->
+    <style name="Widget.App.Button.Primary" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/primary</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="elevation">4dp</item>
+    </style>
+
+    <!-- Outlined Menu / Navigation Button -->
+    <style name="Widget.App.Button.OutlinedMenu" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="backgroundTint">@color/card_bg</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="strokeColor">@color/border_color</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="elevation">2dp</item>
+    </style>
+</resources>

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical">
+
+    <!-- Executive Header Section -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/primary_dark"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="32dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:orientation="vertical">
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Faculty &amp; Admin"
+                android:textColor="@android:color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Featured Overview Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="@color/primary"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.08"
+                        android:text="SYSTEM STATUS"
+                        android:textColor="#8AB4F8"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Academic Year 2026–2027"
+                        android:textColor="@android:color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Active Term: 1st Semester • Portal Online"
+                        android:textColor="#93C5FD"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Navigation Label -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:letterSpacing="0.08"
+                android:text="MANAGEMENT MODULES"
+                android:textColor="@color/primary_dark"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <!-- Manage Students Action Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnManageStudents"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="12dp"
+                android:gravity="start|center_vertical"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:text="Manage Students"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/card_bg"
+                app:cornerRadius="14dp"
+                app:strokeColor="@color/border_color"
+                app:strokeWidth="1dp" />
+
+            <!-- Manage Subjects Action Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnManageSubjects"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="12dp"
+                android:gravity="start|center_vertical"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:text="Manage Subjects"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/card_bg"
+                app:cornerRadius="14dp"
+                app:strokeColor="@color/border_color"
+                app:strokeWidth="1dp" />
+
+            <!-- Manage Grades Action Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnManageGrade"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="12dp"
+                android:gravity="start|center_vertical"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:text="Manage Grades"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/card_bg"
+                app:cornerRadius="14dp"
+                app:strokeColor="@color/border_color"
+                app:strokeWidth="1dp" />
+
+            <!-- Manage Schedule Action Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnManageSchedule"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="24dp"
+                android:gravity="start|center_vertical"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:text="Manage Schedule"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/card_bg"
+                app:cornerRadius="14dp"
+                app:strokeColor="@color/border_color"
+                app:strokeWidth="1dp" />
+
+            <!-- Logout Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:gravity="center"
+                android:text="Logout Account"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="#EF4444"
+                app:cornerRadius="14dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

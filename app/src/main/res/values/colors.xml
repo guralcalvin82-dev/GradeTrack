@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Deep Navy Theme Inspired by Reference Image -->
+    <color name="primary">#1B2A4A</color>        <!-- Dark Navy Header/Accent -->
+    <color name="primary_dark">#121C33</color>   <!-- Deepest Navy Blue -->
+    <color name="background">#F4F6F9</color>     <!-- Off-White Soft Background -->
+    <color name="card_bg">#FFFFFF</color>        <!-- Clean White Cards -->
+    <color name="accent_blue">#EAF1FA</color>      <!-- Subtle Blue Surface Tint -->
+
+    <!-- Text Colors -->
+    <color name="text_primary">#101828</color>   <!-- Dark Slate -->
+    <color name="text_secondary">#667085</color> <!-- Soft Muted Slate -->
+    <color name="text_light">#D0D5DD</color>     <!-- Soft White/Grey for Header Subtitles -->
+    <color name="border_color">#E4E7EC</color>   <!-- Subtle Card/Input Borders -->
+</resources>
