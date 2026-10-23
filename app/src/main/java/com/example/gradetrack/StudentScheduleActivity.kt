@@ -1,15 +1,12 @@
-
 package com.example.gradetrack
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
-import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Spinner
+import android.widget.LinearLayout
 import android.widget.TableLayout
-import android.widget.TableRow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
@@ -18,10 +15,14 @@ class StudentScheduleActivity : AppCompatActivity() {
 
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var tlSchedule: TableLayout
-    private lateinit var spinnerSemester: Spinner
+    private lateinit var btnSem1: MaterialButton
+    private lateinit var btnSem2: MaterialButton
 
     private var studentId: String = ""
     private var selectedSemester: Int = 1
+
+    // Must match the header weights in activity_student_schedule.xml
+    private val weights = floatArrayOf(1.1f, 1.0f, 1.1f, 0.6f)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,63 +31,46 @@ class StudentScheduleActivity : AppCompatActivity() {
         dbHelper = DatabaseHelper(this)
 
         tlSchedule = findViewById(R.id.tlSchedule)
-        spinnerSemester = findViewById(R.id.spinnerSemester)
+        btnSem1 = findViewById(R.id.btnSem1)
+        btnSem2 = findViewById(R.id.btnSem2)
 
-        // Get the logged-in student's ID.
         studentId = intent.getStringExtra("STUDENT_ID")
             ?: intent.getStringExtra("user_id")
                     ?: ""
 
-        findViewById<MaterialButton>(R.id.btnBack).setOnClickListener {
-            finish()
-        }
+        findViewById<MaterialButton>(R.id.btnBack).setOnClickListener { finish() }
 
-        setupSemesterSpinner()
+        btnSem1.setOnClickListener { selectSemester(1) }
+        btnSem2.setOnClickListener { selectSemester(2) }
+
+        selectSemester(1)
     }
 
-    private fun setupSemesterSpinner() {
-        val semesters = arrayOf(
-            "BSIS - 1st Semester",
-            "BSIS - 2nd Semester"
-        )
+    private fun selectSemester(semester: Int) {
+        selectedSemester = semester
+        updateSemesterButtons()
+        loadSchedule()
+    }
 
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            semesters
-        )
+    private fun updateSemesterButtons() {
+        val primary = getColor(R.color.primary_dark)
+        styleButton(btnSem1, selectedSemester == 1, primary)
+        styleButton(btnSem2, selectedSemester == 2, primary)
+    }
 
-        adapter.setDropDownViewResource(
-            android.R.layout.simple_spinner_dropdown_item
-        )
-
-        spinnerSemester.adapter = adapter
-
-        spinnerSemester.onItemSelectedListener =
-            object : AdapterView.OnItemSelectedListener {
-
-                override fun onItemSelected(
-                    parent: AdapterView<*>,
-                    view: View?,
-                    position: Int,
-                    id: Long
-                ) {
-                    selectedSemester = position + 1
-                    loadSchedule()
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>) {
-                    // No action needed.
-                }
-            }
+    private fun styleButton(button: MaterialButton, selected: Boolean, primary: Int) {
+        if (selected) {
+            button.backgroundTintList = ColorStateList.valueOf(primary)
+            button.setTextColor(Color.WHITE)
+        } else {
+            button.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            button.setTextColor(primary)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-
-        if (::dbHelper.isInitialized && ::tlSchedule.isInitialized) {
-            loadSchedule()
-        }
+        loadSchedule()
     }
 
     private fun loadSchedule() {
@@ -97,72 +81,49 @@ class StudentScheduleActivity : AppCompatActivity() {
             return
         }
 
-        // Retrieve schedule records from DatabaseHelper.kt.
-        val schedules = dbHelper.getStudentSchedule(
-            studentId.trim(),
-            selectedSemester
-        )
+        val schedules = dbHelper.getStudentSchedule(studentId.trim(), selectedSemester)
 
         if (schedules.isEmpty()) {
-            addMessageRow(
-                "No schedule available for Semester $selectedSemester."
-            )
+            addMessageRow("No schedule available for Semester $selectedSemester.")
             return
         }
 
         for (item in schedules) {
-            val row = TableRow(this).apply {
-                setPadding(4, 12, 4, 12)
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
+                setPadding(8, 12, 8, 12)
+                layoutParams = TableLayout.LayoutParams(
+                    TableLayout.LayoutParams.MATCH_PARENT,
+                    TableLayout.LayoutParams.WRAP_CONTENT
+                )
             }
 
-            // Day and time
-            row.addView(
-                createCell("${item.day}\n${item.time}")
-            )
+            row.addView(createCell("${item.day}\n${item.time}", weights[0], Gravity.START))
 
-            // Subject code and subject name
             val subjectText = if (item.subjectName.isNotBlank()) {
                 "${item.subjectCode}\n${item.subjectName}"
-            } else {
-                item.subjectCode
-            }
+            } else item.subjectCode
+            row.addView(createCell(subjectText, weights[1], Gravity.START))
 
-            row.addView(createCell(subjectText))
-
-            // Instructor
-            row.addView(
-                createCell(
-                    item.instructor.ifBlank { "Not assigned" }
-                )
-            )
-
-            // Classroom
-            row.addView(createCell(item.room))
+            row.addView(createCell(item.instructor.ifBlank { "Not assigned" }, weights[2], Gravity.START))
+            row.addView(createCell(item.room, weights[3], Gravity.END))
 
             tlSchedule.addView(row)
         }
     }
 
-    private fun createCell(value: String): TextView {
+    private fun createCell(value: String, weight: Float, align: Int): TextView {
         return TextView(this).apply {
             text = value
             textSize = 12f
             setTextColor(getColor(R.color.text_primary))
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(6, 4, 6, 4)
-
-            layoutParams = TableRow.LayoutParams(
-                0,
-                TableRow.LayoutParams.WRAP_CONTENT,
-                1f
-            )
+            gravity = align or Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, weight)
         }
     }
 
     private fun addMessageRow(message: String) {
-        val row = TableRow(this)
-
         val textView = TextView(this).apply {
             text = message
             textSize = 14f
@@ -170,17 +131,12 @@ class StudentScheduleActivity : AppCompatActivity() {
             setTextColor(getColor(R.color.text_primary))
             gravity = Gravity.CENTER
             setPadding(12, 24, 12, 24)
-
-            layoutParams = TableRow.LayoutParams(
-                TableRow.LayoutParams.MATCH_PARENT,
-                TableRow.LayoutParams.WRAP_CONTENT
-            ).apply {
-                span = 4
-            }
+            layoutParams = TableLayout.LayoutParams(
+                TableLayout.LayoutParams.MATCH_PARENT,
+                TableLayout.LayoutParams.WRAP_CONTENT
+            )
         }
-
-        row.addView(textView)
-        tlSchedule.addView(row)
+        tlSchedule.addView(textView)
     }
 
     override fun onDestroy() {

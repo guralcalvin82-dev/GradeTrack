@@ -101,24 +101,6 @@
                         android:textSize="13sp" />
                 </LinearLayout>
 
-                <!-- Year Level Selection Spinner -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@color/accent_blue"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="4dp">
-
-                    <Spinner
-                        android:id="@+id/spinnerYearLevel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="48dp"
-                        android:minHeight="48dp"
-                        android:spinnerMode="dropdown"
-                        tools:ignore="TouchTargetSizeCheck" />
-                </LinearLayout>
-
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -171,50 +153,11 @@
                         android:insetBottom="0dp"
                         android:paddingVertical="10dp"
                         android:text="2ND SEMESTER"
-                        android:textColor="@color/primary_dark"
+                        android:textColor="@android:color/white"
                         android:textSize="12sp"
                         android:textStyle="bold"
-                        app:cornerRadius="10dp"
-                        app:strokeColor="@color/primary_dark" />
-                </LinearLayout>
-
-                <!-- Column Header Row with Midterm & Final -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/accent_blue"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="10dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="2"
-                        android:text="SUBJECT / COURSE"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="MIDTERM"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="end"
-                        android:text="FINAL"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
+                        app:backgroundTint="@color/primary_dark"
+                        app:cornerRadius="10dp" />
                 </LinearLayout>
 
                 <!-- Scrollable Grades List Container -->

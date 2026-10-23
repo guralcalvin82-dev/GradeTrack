@@ -16,7 +16,10 @@ data class StudentGrade(
     val final: Double
 ) {
     val average: Double
-        get() = (midterm + final) / 2.0
+        get() {
+            val entered = listOf(midterm, final).filter { it > 0.0 }
+            return if (entered.isEmpty()) 0.0 else entered.sum() / entered.size
+        }
 }
 
 data class ScheduleItem(

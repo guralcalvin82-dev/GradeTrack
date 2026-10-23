@@ -1,7 +1,6 @@
 package com.example.gradetrack
 
 import android.app.AlertDialog
-import android.content.ContentValues
 import android.graphics.Typeface
 import android.os.Bundle
 import android.text.Editable
@@ -50,7 +49,6 @@ class GradeManagementActivity : AppCompatActivity() {
 
     private val allSections = listOf("BSIS 2A", "BSIS 2B", "BSIS 2C", "BSIS 2D")
 
-    // Data holder for student grade rows in step 4
     private data class GradeRowData(
         val studentId: String,
         val studentName: String,
@@ -58,6 +56,7 @@ class GradeManagementActivity : AppCompatActivity() {
         val etFinal: EditText,
         val tvGrade: TextView
     )
+
     private val gradeRowList = mutableListOf<GradeRowData>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,10 +73,12 @@ class GradeManagementActivity : AppCompatActivity() {
 
     private fun initViews() {
         findViewById<Button>(R.id.btnBack).setOnClickListener {
-            if (step4Layout.visibility == View.VISIBLE) showStep(3)
-            else if (step3Layout.visibility == View.VISIBLE) showStep(2)
-            else if (step2Layout.visibility == View.VISIBLE) showStep(1)
-            else finish()
+            when {
+                step4Layout.visibility == View.VISIBLE -> showStep(3)
+                step3Layout.visibility == View.VISIBLE -> showStep(2)
+                step2Layout.visibility == View.VISIBLE -> showStep(1)
+                else -> finish()
+            }
         }
 
         step1Layout = findViewById(R.id.step1Layout)
@@ -106,13 +107,15 @@ class GradeManagementActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val query = s.toString().trim().lowercase(Locale.getDefault())
-                val filtered = allSections.filter { it.lowercase(Locale.getDefault()).contains(query) }
+                val filtered = allSections.filter {
+                    it.lowercase(Locale.getDefault()).contains(query)
+                }
                 populateSections(filtered)
             }
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Step 2: Select Semester
+        // Step 2: Select semester
         btnSem1.setOnClickListener {
             selectedSemester = 1
             tvSemesterHeader.text = "$selectedSection\n1st Semester\n\nSELECT SUBJECT"
@@ -127,7 +130,7 @@ class GradeManagementActivity : AppCompatActivity() {
             showStep(3)
         }
 
-        // Step 4: Save Grades Button
+        // Step 4: Save grades
         btnSaveGrades.setOnClickListener {
             saveAllGrades()
         }
@@ -171,16 +174,43 @@ class GradeManagementActivity : AppCompatActivity() {
         }
     }
 
+    /** Loads subjects scheduled for the selected section + semester. Falls back to all subjects. */
+    private fun loadSubjectList(): List<Pair<String, String>> {
+        val db = dbHelper.readableDatabase
+        val result = mutableListOf<Pair<String, String>>()
+
+        db.rawQuery(
+            """
+            SELECT DISTINCT s.code, s.subject_name
+            FROM ${DatabaseHelper.TABLE_SUBJECTS} s
+            JOIN ${DatabaseHelper.TABLE_CLASS_SCHEDULE} c ON c.subject_code = s.code
+            WHERE c.course = ? AND c.semester = ?
+            ORDER BY s.code
+            """.trimIndent(),
+            arrayOf(selectedSection.trim().uppercase(Locale.ROOT), selectedSemester.toString())
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                result.add(Pair(cursor.getString(0), cursor.getString(1)))
+            }
+        }
+
+        if (result.isEmpty()) {
+            db.rawQuery(
+                "SELECT code, subject_name FROM ${DatabaseHelper.TABLE_SUBJECTS} ORDER BY code",
+                null
+            ).use { cursor ->
+                while (cursor.moveToNext()) {
+                    result.add(Pair(cursor.getString(0), cursor.getString(1)))
+                }
+            }
+        }
+        return result
+    }
+
     private fun populateSubjects() {
         layoutSubjectsContainer.removeAllViews()
 
-        val db = dbHelper.readableDatabase
-        val cursor = db.rawQuery("SELECT code, subject_name FROM ${DatabaseHelper.TABLE_SUBJECTS}", null)
-
-        while (cursor.moveToNext()) {
-            val code = cursor.getString(0)
-            val name = cursor.getString(1)
-
+        for ((code, name) in loadSubjectList()) {
             val card = CardView(this).apply {
                 radius = 12f
                 cardElevation = 2f
@@ -192,8 +222,11 @@ class GradeManagementActivity : AppCompatActivity() {
                 setOnClickListener {
                     selectedSubjectCode = code
                     selectedSubjectName = name
-                    tvGradeHeader.text = "Section: $selectedSection\nSemester: ${if (selectedSemester == 1) "1st" else "2nd"} Semester\nSubject: $code – $name"
-                    loadGradeEntryRows(selectedSemester, code, name)
+                    tvGradeHeader.text =
+                        "Section: $selectedSection\n" +
+                                "Semester: ${if (selectedSemester == 1) "1st" else "2nd"} Semester\n" +
+                                "Subject: $code – $name"
+                    loadGradeEntryRows(selectedSemester, code)
                     showStep(4)
                 }
             }
@@ -218,13 +251,11 @@ class GradeManagementActivity : AppCompatActivity() {
             layout.addView(tvCode)
             layout.addView(tvName)
             card.addView(layout)
-
             layoutSubjectsContainer.addView(card)
         }
-        cursor.close()
     }
 
-    private fun loadGradeEntryRows(semester: Int, subjectCode: String, subjectName: String) {
+    private fun loadGradeEntryRows(semester: Int, subjectCode: String) {
         if (tlGradeEntry.childCount > 1) {
             tlGradeEntry.removeViews(1, tlGradeEntry.childCount - 1)
         }
@@ -232,27 +263,35 @@ class GradeManagementActivity : AppCompatActivity() {
 
         val db = dbHelper.readableDatabase
         val sectionNameOnly = selectedSection.replace("BSIS ", "").trim()
-        val studentCursor = db.rawQuery(
-            "SELECT user_id, name FROM ${DatabaseHelper.TABLE_USERS} WHERE role = 'STUDENT' AND section = ?",
+
+        // Read all students first, then close the cursor before doing nested queries
+        val students = mutableListOf<Pair<String, String>>()
+        db.rawQuery(
+            "SELECT user_id, name FROM ${DatabaseHelper.TABLE_USERS} " +
+                    "WHERE role = 'STUDENT' AND section = ? ORDER BY name",
             arrayOf(sectionNameOnly)
-        )
+        ).use { c ->
+            while (c.moveToNext()) {
+                students.add(Pair(c.getString(0), c.getString(1)))
+            }
+        }
 
-        while (studentCursor.moveToNext()) {
-            val studentId = studentCursor.getString(0)
-            val studentName = studentCursor.getString(1)
-
+        for ((studentId, studentName) in students) {
             var midterm = ""
             var final = ""
 
-            val gradeCursor = db.rawQuery(
-                "SELECT midterm, final FROM ${DatabaseHelper.TABLE_GRADES} WHERE student_id = ? AND subject_code = ? AND semester = ?",
+            db.rawQuery(
+                "SELECT midterm, final FROM ${DatabaseHelper.TABLE_GRADES} " +
+                        "WHERE student_id = ? AND subject_code = ? AND semester = ?",
                 arrayOf(studentId, subjectCode, semester.toString())
-            )
-            if (gradeCursor.moveToFirst()) {
-                midterm = if (gradeCursor.getDouble(0) > 0.0) gradeCursor.getDouble(0).toString() else ""
-                final = if (gradeCursor.getDouble(1) > 0.0) gradeCursor.getDouble(1).toString() else ""
+            ).use { g ->
+                if (g.moveToFirst()) {
+                    val m = g.getDouble(0)
+                    val f = g.getDouble(1)
+                    midterm = if (m > 0.0) m.toString() else ""
+                    final = if (f > 0.0) f.toString() else ""
+                }
             }
-            gradeCursor.close()
 
             val tvName = TextView(this).apply {
                 text = studentName
@@ -273,15 +312,18 @@ class GradeManagementActivity : AppCompatActivity() {
                         .setTitle("Delete Grade Record")
                         .setMessage("Are you sure you want to delete grades for $studentName?")
                         .setPositiveButton("Delete") { _, _ ->
-                            val writeDb = dbHelper.writableDatabase
-                            writeDb.delete(
+                            dbHelper.writableDatabase.delete(
                                 DatabaseHelper.TABLE_GRADES,
                                 "student_id = ? AND subject_code = ? AND semester = ?",
                                 arrayOf(studentId, subjectCode, semester.toString())
                             )
                             etMidterm.setText("")
                             etFinal.setText("")
-                            Toast.makeText(this@GradeManagementActivity, "Grade Record Deleted", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@GradeManagementActivity,
+                                "Grade Record Deleted",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                         .setNegativeButton("Cancel", null)
                         .show()
@@ -300,9 +342,10 @@ class GradeManagementActivity : AppCompatActivity() {
             val textWatcher = object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val m = etMidterm.text.toString()
-                    val f = etFinal.text.toString()
-                    tvGrade.text = calculateAverage(m, f)
+                    tvGrade.text = calculateAverage(
+                        etMidterm.text.toString(),
+                        etFinal.text.toString()
+                    )
                 }
                 override fun afterTextChanged(s: Editable?) {}
             }
@@ -318,7 +361,6 @@ class GradeManagementActivity : AppCompatActivity() {
             tlGradeEntry.addView(row)
             gradeRowList.add(GradeRowData(studentId, studentName, etMidterm, etFinal, tvGrade))
         }
-        studentCursor.close()
     }
 
     private fun createGradeEditText(initialValue: String): EditText {
@@ -337,46 +379,70 @@ class GradeManagementActivity : AppCompatActivity() {
             mStr.toDoubleOrNull(),
             fStr.toDoubleOrNull()
         )
-
-        if (grades.isEmpty()) {
-            return "-"
-        }
+        if (grades.isEmpty()) return "-"
 
         val average = grades.sum() / grades.size
-        return String.format(Locale.getDefault(), "%.2f", average)
+        return String.format(Locale.US, "%.2f", average)
     }
 
     private fun saveAllGrades() {
-        val db = dbHelper.writableDatabase
-        for (rowData in gradeRowList) {
-            val midterm = rowData.etMidterm.text.toString().toDoubleOrNull() ?: 0.0
-            val final = rowData.etFinal.text.toString().toDoubleOrNull() ?: 0.0
-
-            val cursor = db.rawQuery(
-                "SELECT id FROM ${DatabaseHelper.TABLE_GRADES} WHERE student_id = ? AND subject_code = ? AND semester = ?",
-                arrayOf(rowData.studentId, selectedSubjectCode, selectedSemester.toString())
-            )
-
-            val values = ContentValues().apply {
-                put("student_id", rowData.studentId)
-                put("subject_code", selectedSubjectCode)
-                put("subject_name", selectedSubjectName)
-                put("prelim", 0.0)
-                put("midterm", midterm)
-                put("final", final)
-                put("semester", selectedSemester)
-            }
-
-            if (cursor.moveToFirst()) {
-                val id = cursor.getLong(0)
-                db.update(DatabaseHelper.TABLE_GRADES, values, "id = ?", arrayOf(id.toString()))
-            } else {
-                db.insert(DatabaseHelper.TABLE_GRADES, null, values)
-            }
-            cursor.close()
+        if (gradeRowList.isEmpty()) {
+            Toast.makeText(this, "No students to save", Toast.LENGTH_SHORT).show()
+            return
         }
 
-        Toast.makeText(this, "Grades Saved & Submitted Successfully!", Toast.LENGTH_SHORT).show()
-        showStep(1)
+        // Validate first so nothing is half-saved
+        for (row in gradeRowList) {
+            val m = row.etMidterm.text.toString().trim()
+            val f = row.etFinal.text.toString().trim()
+
+            for ((label, value, field) in listOf(
+                Triple("Midterm", m, row.etMidterm),
+                Triple("Final", f, row.etFinal)
+            )) {
+                if (value.isEmpty()) continue
+                val num = value.toDoubleOrNull()
+                if (num == null || num < 0.0 || num > 100.0) {
+                    field.error = "0 - 100 only"
+                    field.requestFocus()
+                    Toast.makeText(
+                        this,
+                        "Invalid $label grade for ${row.studentName}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return
+                }
+            }
+        }
+
+        val db = dbHelper.writableDatabase
+        var failed = 0
+
+        db.beginTransaction()
+        try {
+            for (row in gradeRowList) {
+                val midterm = row.etMidterm.text.toString().toDoubleOrNull() ?: 0.0
+                val final = row.etFinal.text.toString().toDoubleOrNull() ?: 0.0
+
+                val ok = dbHelper.saveGrade(
+                    studentId = row.studentId,
+                    subjectCode = selectedSubjectCode,
+                    midterm = midterm,
+                    final = final,
+                    semester = selectedSemester
+                )
+                if (!ok) failed++
+            }
+            if (failed == 0) db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+
+        if (failed == 0) {
+            Toast.makeText(this, "Grades Saved & Submitted Successfully!", Toast.LENGTH_SHORT).show()
+            showStep(1)
+        } else {
+            Toast.makeText(this, "Failed to save $failed record(s). Nothing was saved.", Toast.LENGTH_LONG).show()
+        }
     }
 }
