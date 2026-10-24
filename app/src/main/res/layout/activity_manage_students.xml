@@ -109,25 +109,6 @@
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
-                    <!-- Year Level / Section Filter Spinner -->
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:background="@color/accent_blue"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="4dp">
-
-                        <Spinner
-                            android:id="@+id/spinnerFilterYear"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:minWidth="48dp"
-                            android:minHeight="48dp"
-                            android:spinnerMode="dropdown"
-                            tools:ignore="TouchTargetSizeCheck" />
-                    </LinearLayout>
-
                 </RelativeLayout>
 
                 <!-- Table Column Header Row -->

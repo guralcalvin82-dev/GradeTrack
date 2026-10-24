@@ -1,6 +1,7 @@
 package com.example.gradetrack
 
 import android.app.AlertDialog
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -8,15 +9,26 @@ import android.view.Gravity
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.button.MaterialButton
 
 class ManageScheduleActivity : AppCompatActivity() {
 
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var tlManageSchedule: TableLayout
     private lateinit var spinnerFilterYear: Spinner
+    private lateinit var btnSem1: MaterialButton
+    private lateinit var btnSem2: MaterialButton
 
     private var facultyId: String = ""
-    private var selectedSectionFilter: String = "All Years / Sections"
+    private var facultyName: String = ""
+
+    // Listahan ng sections (ginagamit sa filter at sa add/edit dialog)
+    private val sections = arrayOf("BSIS 2A", "BSIS 2B", "BSIS 2C", "BSIS 2D")
+    private var selectedSectionFilter: String = sections[0]
+
+    // Semester labels (index 0 = 1st, index 1 = 2nd). Int ang semester sa database: 1 o 2.
+    private val semesters = arrayOf("1st Semester", "2nd Semester")
+    private var selectedSemester: Int = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,18 +43,26 @@ class ManageScheduleActivity : AppCompatActivity() {
         }
 
         dbHelper = DatabaseHelper(this)
+        facultyName = dbHelper.getUserName(facultyId)
         tlManageSchedule = findViewById(R.id.tlManageSchedule)
         spinnerFilterYear = findViewById(R.id.spinnerFilterYear)
+        btnSem1 = findViewById(R.id.btnSem1)
+        btnSem2 = findViewById(R.id.btnSem2)
 
         findViewById<Button>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<Button>(R.id.btnAddSchedule).setOnClickListener { showScheduleDialog(null) }
 
+        // Semester buttons (1ST SEMESTER / 2ND SEMESTER)
+        btnSem1.setOnClickListener { selectSemester(0) }
+        btnSem2.setOnClickListener { selectSemester(1) }
+        styleSemesterButtons()
+
         // Filter by section
-        val years = arrayOf("All Years / Sections", "BSIS 2A", "BSIS 2B", "BSIS 2C", "BSIS 2D")
-        spinnerFilterYear.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, years)
+        spinnerFilterYear.adapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, sections)
         spinnerFilterYear.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                selectedSectionFilter = years[position]
+                selectedSectionFilter = sections[position]
                 loadSchedules()
             }
 
@@ -50,20 +70,38 @@ class ManageScheduleActivity : AppCompatActivity() {
         }
     }
 
+    // Palitan ang napiling semester at i-reload ang listahan
+    private fun selectSemester(index: Int) {
+        selectedSemester = index + 1
+        styleSemesterButtons()
+        loadSchedules()
+    }
+
+    // Napili: filled (primary_dark, white text). Hindi napili: outline lang (primary_dark text)
+    private fun styleSemesterButtons() {
+        val sem1Selected = selectedSemester == 1
+        listOf(btnSem1 to sem1Selected, btnSem2 to !sem1Selected).forEach { (btn, selected) ->
+            btn.backgroundTintList = ColorStateList.valueOf(
+                if (selected) getColor(R.color.primary_dark) else Color.TRANSPARENT
+            )
+            btn.setTextColor(if (selected) Color.WHITE else getColor(R.color.primary_dark))
+        }
+    }
+
     private fun loadSchedules() {
         tlManageSchedule.removeAllViews()
 
-        // Schedule na tinuturo ng faculty na naka-login
-        val all = dbHelper.getClassesByFaculty(facultyId)
-        val schedules = if (selectedSectionFilter == "All Years / Sections") {
-            all
-        } else {
-            all.filter { it.course.trim().equals(selectedSectionFilter.trim(), ignoreCase = true) }
-        }
+        // Parehong source ng student schedule (section + semester),
+        // pero tanging klase ng naka-login na faculty ang lalabas at ma-ma-manage
+        val schedules = dbHelper.getClassesBySection(selectedSectionFilter, selectedSemester)
+            .filter {
+                it.facultyId.equals(facultyId, ignoreCase = true) ||
+                        (facultyName.isNotBlank() && it.instructor.equals(facultyName, ignoreCase = true))
+            }
 
         if (schedules.isEmpty()) {
             tlManageSchedule.addView(TextView(this).apply {
-                text = "No schedule yet. Tap \"Add Schedule Entry\" to add one."
+                text = "No schedule for $selectedSectionFilter (${semesters[selectedSemester - 1]}) yet. Tap \"Add Schedule Entry\" to add one."
                 setTextColor(getColor(R.color.text_secondary))
                 textSize = 12f
                 setPadding(12, 24, 12, 24)
@@ -80,7 +118,7 @@ class ManageScheduleActivity : AppCompatActivity() {
             // Column 1: Time & Day
             val timeLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                layoutParams = TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 1.0f)
+                layoutParams = TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 1.2f)
             }
             timeLayout.addView(TextView(this).apply {
                 text = item.time
@@ -98,7 +136,7 @@ class ManageScheduleActivity : AppCompatActivity() {
             // Column 2: Subject code & name
             val subjectLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
-                layoutParams = TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 1.1f)
+                layoutParams = TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 1.5f)
             }
             subjectLayout.addView(TextView(this).apply {
                 text = item.subjectCode
@@ -113,36 +151,24 @@ class ManageScheduleActivity : AppCompatActivity() {
             })
             row.addView(subjectLayout)
 
-            // Column 3: Course / Section
-            val tvCourse = TextView(this).apply {
-                text = item.course
-                setTextColor(getColor(R.color.text_primary))
-                textSize = 12f
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 0.8f).apply {
-                    gravity = Gravity.CENTER_VERTICAL
-                }
-            }
-            row.addView(tvCourse)
-
-            // Column 4: Room
+            // Column 3: Room
             val tvRoom = TextView(this).apply {
                 text = item.room
                 setTextColor(getColor(R.color.primary_dark))
                 textSize = 12f
                 setTypeface(null, Typeface.BOLD)
                 gravity = Gravity.START or Gravity.CENTER_VERTICAL
-                layoutParams = TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 0.6f).apply {
+                layoutParams = TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 0.7f).apply {
                     gravity = Gravity.START or Gravity.CENTER_VERTICAL
                 }
             }
             row.addView(tvRoom)
 
-            // Column 5: Action (Inline Edit & Del links)
+            // Column 4: Action (Edit & Del) - sariling klase lang ng faculty
             val actionLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.END or Gravity.CENTER_VERTICAL
-                layoutParams = TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 0.7f).apply {
+                layoutParams = TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 1.0f).apply {
                     gravity = Gravity.END or Gravity.CENTER_VERTICAL
                 }
             }
@@ -152,7 +178,7 @@ class ManageScheduleActivity : AppCompatActivity() {
                 textSize = 12f
                 setTypeface(null, Typeface.BOLD)
                 setTextColor(getColor(R.color.text_primary))
-                setPadding(0, 0, 10, 0)
+                setPadding(12, 16, 12, 16)
                 setOnClickListener { showScheduleDialog(item) }
             }
 
@@ -161,7 +187,7 @@ class ManageScheduleActivity : AppCompatActivity() {
                 textSize = 12f
                 setTypeface(null, Typeface.BOLD)
                 setTextColor(Color.parseColor("#E53935"))
-                setPadding(0, 0, 0, 0)
+                setPadding(12, 16, 12, 16)
                 setOnClickListener { deleteSchedule(item.id) }
             }
 
@@ -203,6 +229,30 @@ class ManageScheduleActivity : AppCompatActivity() {
             if (index >= 0) setSelection(index)
         }
 
+        // Course / Section (spinner para laging tugma sa filter)
+        val spCourse = Spinner(this).apply {
+            adapter = ArrayAdapter(
+                this@ManageScheduleActivity,
+                android.R.layout.simple_spinner_dropdown_item,
+                sections
+            )
+            // Edit: gamitin ang course ng item. Add: gamitin ang kasalukuyang filter.
+            val target = (item?.course ?: selectedSectionFilter).trim()
+            val index = sections.indexOfFirst { it.equals(target, ignoreCase = true) }
+            if (index >= 0) setSelection(index)
+        }
+
+        // Semester (Edit: semester ng item. Add: kasalukuyang napiling semester)
+        val spSemester = Spinner(this).apply {
+            adapter = ArrayAdapter(
+                this@ManageScheduleActivity,
+                android.R.layout.simple_spinner_dropdown_item,
+                semesters
+            )
+            val index = (item?.semester ?: selectedSemester) - 1
+            if (index in semesters.indices) setSelection(index)
+        }
+
         // Day
         val spDay = Spinner(this).apply {
             adapter = ArrayAdapter(
@@ -214,10 +264,6 @@ class ManageScheduleActivity : AppCompatActivity() {
             if (index >= 0) setSelection(index)
         }
 
-        val etCourse = EditText(this).apply {
-            hint = "Course / Section (e.g. BSIS 2A)"
-            setText(item?.course ?: "")
-        }
         val etTime = EditText(this).apply {
             hint = "Time (e.g. 10:00 AM - 12:00 PM)"
             setText(item?.time ?: "")
@@ -228,7 +274,8 @@ class ManageScheduleActivity : AppCompatActivity() {
         }
 
         layout.addView(spSubject)
-        layout.addView(etCourse)
+        layout.addView(spCourse)
+        layout.addView(spSemester)
         layout.addView(spDay)
         layout.addView(etTime)
         layout.addView(etRoom)
@@ -245,20 +292,39 @@ class ManageScheduleActivity : AppCompatActivity() {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val code = subjects[spSubject.selectedItemPosition].code
                 val day = spDay.selectedItem as String
-                val course = etCourse.text.toString().trim()
+                val course = spCourse.selectedItem as String
+                val semester = spSemester.selectedItemPosition + 1
                 val time = etTime.text.toString().trim()
                 val room = etRoom.text.toString().trim()
 
                 val result = if (item != null) {
-                    dbHelper.updateClass(item.id, facultyId, code, course, day, time, room)
+                    // Gamitin ang faculty ng klase mismo, hindi ng naka-login,
+                    // para hindi mapalitan ang instructor ng klase ng iba (hal. Kyle).
+                    dbHelper.updateClass(
+                        item.id, item.facultyId.ifBlank { facultyId },
+                        code, course, day, time, room, semester
+                    )
                 } else {
-                    dbHelper.addClass(facultyId, code, course, day, time, room)
+                    dbHelper.addClass(facultyId, code, course, day, time, room, semester)
                 }
 
                 Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
                 if (result.success) {
                     dialog.dismiss()
-                    loadSchedules()
+
+                    // Ilipat ang napiling semester sa semester ng na-save na schedule
+                    if (semester != selectedSemester) {
+                        selectedSemester = semester
+                        styleSemesterButtons()
+                    }
+
+                    // Ilipat ang filter sa section ng na-save na schedule para agad makita
+                    val savedIndex = sections.indexOfFirst { it.equals(course, ignoreCase = true) }
+                    if (savedIndex >= 0 && sections[savedIndex] != selectedSectionFilter) {
+                        spinnerFilterYear.setSelection(savedIndex) // tatawag ng loadSchedules()
+                    } else {
+                        loadSchedules()
+                    }
                 }
             }
         }
@@ -276,5 +342,10 @@ class ManageScheduleActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    override fun onDestroy() {
+        dbHelper.close()
+        super.onDestroy()
     }
 }

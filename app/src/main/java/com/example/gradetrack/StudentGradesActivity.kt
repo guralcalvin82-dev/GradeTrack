@@ -1,6 +1,7 @@
 package com.example.gradetrack
 
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.Button
@@ -8,6 +9,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import java.util.Locale
 
 class StudentGradesActivity : AppCompatActivity() {
@@ -30,13 +33,13 @@ class StudentGradesActivity : AppCompatActivity() {
     private var currentStudentId = ""
     private var selectedSemester = 1
 
+    private fun color(id: Int) = ContextCompat.getColor(this, id)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_grades)
 
         dbHelper = DatabaseHelper(this)
-
-        currentStudentId = intent.getStringExtra("STUDENT_ID") ?: ""
 
         initializeViews()
 
@@ -54,14 +57,26 @@ class StudentGradesActivity : AppCompatActivity() {
             loadGrades()
         }
 
+        currentStudentId = resolveStudentId()
+
         if (currentStudentId.isEmpty()) {
             Toast.makeText(this, "Student account not found.", Toast.LENGTH_LONG).show()
+            tvStatus.text = "NO ACCOUNT"
             return
         }
 
         loadStudentInfo()
+        selectedSemester = pickSemesterWithGrades()
         updateSemesterButtons()
         loadGrades()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // I-refresh tuwing babalik sa screen para laging updated ang grades
+        if (currentStudentId.isNotEmpty()) {
+            loadGrades()
+        }
     }
 
     private fun initializeViews() {
@@ -75,27 +90,70 @@ class StudentGradesActivity : AppCompatActivity() {
         btnBack = findViewById(R.id.btnBack)
     }
 
+    /**
+     * Kinukuha ang student ID mula sa intent (sinusubukan ang iba't ibang key),
+     * tapos kino-convert sa tamang user_id sa database kahit name o numeric id ang naipasa.
+     */
+    private fun resolveStudentId(): String {
+        val keys = listOf("STUDENT_ID", "USER_ID", "user_id", "studentId", "student_id", "userId", "ID")
+        var raw = ""
+        for (k in keys) {
+            val v = intent.getStringExtra(k)
+            if (!v.isNullOrBlank()) {
+                raw = v.trim()
+                break
+            }
+        }
+        if (raw.isEmpty()) return ""
+
+        val db = dbHelper.readableDatabase
+        db.rawQuery(
+            """
+            SELECT user_id FROM ${DatabaseHelper.TABLE_USERS}
+            WHERE role = 'STUDENT'
+              AND (user_id = ? COLLATE NOCASE
+                   OR name = ? COLLATE NOCASE
+                   OR CAST(id AS TEXT) = ?)
+            LIMIT 1
+            """.trimIndent(),
+            arrayOf(raw, raw, raw)
+        ).use { c ->
+            if (c.moveToFirst()) return c.getString(0)
+        }
+        return ""
+    }
+
+    /** Pipiliin ang semester na may naipasok nang grade; Sem 1 kung wala pa sa dalawa. */
+    private fun pickSemesterWithGrades(): Int {
+        for (sem in 1..2) {
+            if (dbHelper.getStudentGrades(currentStudentId, sem).any { it.hasAnyGrade }) {
+                return sem
+            }
+        }
+        return 1
+    }
+
     private fun loadStudentInfo() {
         val db = dbHelper.readableDatabase
-        val cursor = db.rawQuery(
+        db.rawQuery(
             """
             SELECT name, course, section
-            FROM users
-            WHERE user_id = ?
-            AND role = 'STUDENT'
+            FROM ${DatabaseHelper.TABLE_USERS}
+            WHERE user_id = ? AND role = 'STUDENT'
             """.trimIndent(),
             arrayOf(currentStudentId)
-        )
+        ).use { cursor ->
+            if (cursor.moveToFirst()) {
+                val name = cursor.getString(0) ?: ""
+                val course = cursor.getString(1) ?: ""
+                val section = cursor.getString(2) ?: ""
 
-        if (cursor.moveToFirst()) {
-            val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
-            val course = cursor.getString(cursor.getColumnIndexOrThrow("course"))
-            val section = cursor.getString(cursor.getColumnIndexOrThrow("section"))
-
-            tvStudentName.text = name
-            tvStudentSection.text = "$course • $section"
+                tvStudentName.text = name
+                tvStudentSection.text = listOf(course, section)
+                    .filter { it.isNotBlank() }
+                    .joinToString(" • ")
+            }
         }
-        cursor.close()
     }
 
     private fun updateSemesterButtons() {
@@ -103,21 +161,47 @@ class StudentGradesActivity : AppCompatActivity() {
         btnSem2.alpha = if (selectedSemester == 2) 1f else 0.6f
     }
 
+    /** Nilalagyan ng text at kulay ang status TextView base sa average. */
+    private fun applyStatus(tv: TextView, average: Double?) {
+        when (dbHelper.getAcademicStatus(average)) {
+            "Passed" -> {
+                tv.text = "PASSED"
+                tv.setTextColor(Color.parseColor("#2E7D32"))
+            }
+            "Failed" -> {
+                tv.text = "FAILED"
+                tv.setTextColor(Color.RED)
+            }
+            else -> {
+                tv.text = "NO GRADES"
+                tv.setTextColor(Color.GRAY)
+            }
+        }
+    }
+
+
     private fun loadGrades() {
         layoutGradesContainer.removeAllViews()
 
         val grades = dbHelper.getStudentGrades(currentStudentId, selectedSemester)
 
+        android.util.Log.d(
+            "GRADES",
+            "id=$currentStudentId sem=$selectedSemester count=${grades.size}"
+        )
+
         if (grades.isEmpty()) {
             val emptyText = TextView(this).apply {
-                text = "No grades available for Semester $selectedSemester."
+                text = "No subjects available for Semester $selectedSemester."
                 textSize = 16f
                 gravity = Gravity.CENTER
+                setTextColor(color(R.color.text_secondary))
                 setPadding(20, 50, 20, 50)
             }
             layoutGradesContainer.addView(emptyText)
             tvSemesterAverage.text = "--"
             tvStatus.text = "NO GRADES"
+            tvStatus.setTextColor(Color.GRAY)
             return
         }
 
@@ -125,15 +209,13 @@ class StudentGradesActivity : AppCompatActivity() {
         var evaluatedSubjectsCount = 0
 
         for (grade in grades) {
-            val validGrades = mutableListOf<Double>()
-            if (grade.midterm > 0.0) validGrades.add(grade.midterm)
-            if (grade.final > 0.0) validGrades.add(grade.final)
+            android.util.Log.d(
+                "GRADES",
+                "${grade.subjectCode} mid=${grade.midterm}(${grade.midtermEntered}) " +
+                        "fin=${grade.final}(${grade.finalEntered})"
+            )
 
-            val subjectAverage = if (validGrades.isNotEmpty()) {
-                validGrades.sum() / validGrades.size
-            } else {
-                null
-            }
+            val subjectAverage: Double? = if (grade.hasAnyGrade) grade.average else null
 
             if (subjectAverage != null) {
                 totalSemesterAverage += subjectAverage
@@ -147,12 +229,13 @@ class StudentGradesActivity : AppCompatActivity() {
             val finalSemesterAverage = totalSemesterAverage / evaluatedSubjectsCount
             tvSemesterAverage.text = String.format(Locale.US, "%.2f", finalSemesterAverage)
 
-            if (finalSemesterAverage >= 75.0) {
-                tvStatus.text = "PASSED"
-                tvStatus.setTextColor(Color.parseColor("#2E7D32")) // Green
+            if (evaluatedSubjectsCount > 0) {
+                val finalSemesterAverage = totalSemesterAverage / evaluatedSubjectsCount
+                tvSemesterAverage.text = String.format(Locale.US, "%.2f", finalSemesterAverage)
+                applyStatus(tvStatus, finalSemesterAverage)
             } else {
-                tvStatus.text = "FAILED"
-                tvStatus.setTextColor(Color.RED)
+                tvSemesterAverage.text = "--"
+                applyStatus(tvStatus, null)
             }
         } else {
             tvSemesterAverage.text = "--"
@@ -162,7 +245,7 @@ class StudentGradesActivity : AppCompatActivity() {
     }
 
     private fun addGradeCard(grade: StudentGrade, average: Double?) {
-        val card = androidx.cardview.widget.CardView(this).apply {
+        val card = CardView(this).apply {
             radius = 16f
             cardElevation = 3f
             setContentPadding(20, 18, 20, 18)
@@ -183,17 +266,17 @@ class StudentGradesActivity : AppCompatActivity() {
         val subjectName = TextView(this).apply {
             text = grade.subjectName
             textSize = 15f
-            setTextColor(Color.DKGRAY)
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(color(R.color.text_primary))
+            setTypeface(null, Typeface.BOLD)
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         }
 
         val subjectCode = TextView(this).apply {
             text = grade.subjectCode
             textSize = 13f
-            setTextColor(Color.GRAY)
+            setTextColor(color(R.color.text_secondary))
             gravity = Gravity.END
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTypeface(null, Typeface.BOLD)
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -210,16 +293,15 @@ class StudentGradesActivity : AppCompatActivity() {
             setPadding(0, 18, 0, 12)
         }
 
-        val midtermStr = if (grade.midterm > 0.0) String.format(Locale.US, "%.2f", grade.midterm) else "-"
-        val finalStr = if (grade.final > 0.0) String.format(Locale.US, "%.2f", grade.final) else "-"
+        val midtermStr =
+            if (grade.midtermEntered) String.format(Locale.US, "%.2f", grade.midterm) else "-"
+        val finalStr =
+            if (grade.finalEntered) String.format(Locale.US, "%.2f", grade.final) else "-"
 
-        val midtermLayout = createGradeColumn("MIDTERM", midtermStr)
-        val finalLayout = createGradeColumn("FINAL", finalStr)
+        gradesRow.addView(createGradeColumn("MIDTERM", midtermStr))
+        gradesRow.addView(createGradeColumn("FINAL", finalStr))
 
-        gradesRow.addView(midtermLayout)
-        gradesRow.addView(finalLayout)
-
-        // Subject Average Text
+        // Subject Average
         val averageStr = if (average != null) {
             String.format(Locale.US, "Final Grade: %.2f", average)
         } else {
@@ -229,8 +311,8 @@ class StudentGradesActivity : AppCompatActivity() {
         val averageText = TextView(this).apply {
             text = averageStr
             textSize = 17f
-            setTextColor(Color.DKGRAY)
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(color(R.color.text_primary))
+            setTypeface(null, Typeface.BOLD)
             gravity = Gravity.END
         }
 
@@ -252,17 +334,17 @@ class StudentGradesActivity : AppCompatActivity() {
         val labelText = TextView(this).apply {
             text = label
             textSize = 11f
-            setTextColor(Color.GRAY)
+            setTextColor(color(R.color.text_secondary))
             gravity = Gravity.CENTER
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTypeface(null, Typeface.BOLD)
         }
 
         val gradeText = TextView(this).apply {
             text = grade
             textSize = 16f
-            setTextColor(Color.DKGRAY)
+            setTextColor(color(R.color.text_primary))
             gravity = Gravity.CENTER
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTypeface(null, Typeface.BOLD)
             setPadding(0, 5, 0, 0)
         }
 

@@ -30,6 +30,11 @@ class StudentDashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_dashboard)
 
+        tvFirstSem = findViewById(R.id.tvFirstSem)
+        tvSecondSem = findViewById(R.id.tvSecondSem)
+        tvOverallAverage = findViewById(R.id.tvOverallAverage)
+        tvStatus = findViewById(R.id.tvStatus)
+
         dbHelper = DatabaseHelper(this)
         studentId = intent.getStringExtra("STUDENT_ID") ?: ""
 
@@ -39,8 +44,7 @@ class StudentDashboardActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Automatically refresh summary averages when coming back to dashboard
-        calculateAndDisplayAverages()
+        showAcademicSummary(studentId)
     }
 
     private fun initViews() {
@@ -112,6 +116,33 @@ class StudentDashboardActivity : AppCompatActivity() {
             tvStatus.text = "NO GRADES"
             tvStatus.setBackgroundColor(Color.parseColor("#E2E8F0"))
             tvStatus.setTextColor(Color.parseColor("#4A5568"))
+        }
+    }
+
+    private fun showAcademicSummary(studentId: String) {
+        val sem1 = dbHelper.getSemesterAverage(studentId, 1)
+        val sem2 = dbHelper.getSemesterAverage(studentId, 2)
+        val overall = dbHelper.getOverallAverage(studentId)
+
+        fun fmt(v: Double?) = v?.let { String.format(java.util.Locale.US, "%.2f", it) } ?: "--"
+
+        tvFirstSem.text = fmt(sem1)
+        tvSecondSem.text = fmt(sem2)
+        tvOverallAverage.text = "Overall Average: ${fmt(overall)}"
+
+        when (dbHelper.getAcademicStatus(overall)) {
+            "Passed" -> {
+                tvStatus.text = "PASSED"
+                tvStatus.setTextColor(android.graphics.Color.parseColor("#2E7D32"))
+            }
+            "Failed" -> {
+                tvStatus.text = "FAILED"
+                tvStatus.setTextColor(android.graphics.Color.RED)
+            }
+            else -> {
+                tvStatus.text = "NO GRADES"
+                tvStatus.setTextColor(getColor(R.color.primary_dark))
+            }
         }
     }
 

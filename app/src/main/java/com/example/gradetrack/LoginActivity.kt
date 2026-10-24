@@ -44,7 +44,7 @@ class LoginActivity : AppCompatActivity() {
         try {
             dbHelper.readableDatabase.rawQuery(
                 """
-            SELECT user_id, role
+            SELECT user_id, role, name
             FROM ${DatabaseHelper.TABLE_USERS}
             WHERE (LOWER(user_id) = LOWER(?)
                    OR LOWER(COALESCE(email, '')) = LOWER(?)
@@ -60,11 +60,18 @@ class LoginActivity : AppCompatActivity() {
                 }
                 val actualUserId = cursor.getString(0)
                 val role = cursor.getString(1) ?: "STUDENT"
+                val name = cursor.getString(2) ?: ""
 
                 val intent = if (role.equals("STUDENT", ignoreCase = true)) {
                     Intent(this, StudentDashboardActivity::class.java)
                         .putExtra("STUDENT_ID", actualUserId)
                 } else {
+                    Toast.makeText(
+                        this,
+                        "Welcome ${facultyTitle(actualUserId)} $name",
+                        Toast.LENGTH_LONG
+                    ).show()
+
                     Intent(this, FacultyDashboardActivity::class.java)
                         .putExtra("FACULTY_ID", actualUserId)
                 }
@@ -77,4 +84,10 @@ class LoginActivity : AppCompatActivity() {
             Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
+
+    // Your database has no gender column, so the title is chosen by faculty ID.
+// FAC2026-002 = Deserie Robles, FAC2026-005 = Cindy Ostonal
+    private fun facultyTitle(facultyId: String): String =
+        if (facultyId in setOf("FAC2026-002", "FAC2026-005")) "Ma'am" else "Sir"
+
 }

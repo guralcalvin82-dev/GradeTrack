@@ -9,15 +9,26 @@ import android.database.sqlite.SQLiteOpenHelper
 import java.util.Locale
 import android.database.SQLException
 
+/**
+ * midtermEntered / finalEntered = true kapag may tunay na grade na naipasok
+ * (kasama ang tunay na 0). Para hindi malito ang "0" at "walang grade".
+ */
 data class StudentGrade(
     val subjectCode: String,
     val subjectName: String,
     val midterm: Double,
-    val final: Double
+    val final: Double,
+    val midtermEntered: Boolean = midterm > 0.0,
+    val finalEntered: Boolean = final > 0.0
 ) {
+    val hasAnyGrade: Boolean
+        get() = midtermEntered || finalEntered
+
     val average: Double
         get() {
-            val entered = listOf(midterm, final).filter { it > 0.0 }
+            val entered = mutableListOf<Double>()
+            if (midtermEntered) entered.add(midterm)
+            if (finalEntered) entered.add(final)
             return if (entered.isEmpty()) 0.0 else entered.sum() / entered.size
         }
 }
@@ -65,7 +76,7 @@ class DatabaseHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "GradeManagement.db"
-        private const val DATABASE_VERSION = 21
+        private const val DATABASE_VERSION = 26
 
         const val TABLE_USERS = "users"
         const val TABLE_GRADES = "grades"
@@ -76,8 +87,10 @@ class DatabaseHelper(context: Context) :
 
         val DAYS = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
-        private const val SEED_COURSE = "BSIS"
-        private const val SEED_SECTION = "2C"
+        const val SEED_COURSE = "BSIS"
+        const val SEED_SECTION = "2C"
+        const val PASSING_MAX = 2.75   // 1.00 hanggang 2.75 = Passed, mas mataas = Failed
+
     }
 
     override fun onConfigure(db: SQLiteDatabase) {
@@ -87,7 +100,7 @@ class DatabaseHelper(context: Context) :
 
     override fun onOpen(db: SQLiteDatabase) {
         super.onOpen(db)
-        insertSubjects(db)
+        if (!db.isReadOnly) insertSubjects(db)
     }
 
 
@@ -179,8 +192,8 @@ class DatabaseHelper(context: Context) :
                 student_id TEXT NOT NULL,
                 subject_code TEXT NOT NULL,
                 prelim REAL DEFAULT 0,
-                midterm REAL DEFAULT 0,
-                final REAL DEFAULT 0,
+                midterm REAL,
+                final REAL,
                 semester INTEGER NOT NULL,
                 UNIQUE(student_id, subject_code, semester),
                 FOREIGN KEY (student_id) REFERENCES $TABLE_USERS(user_id)
@@ -195,6 +208,7 @@ class DatabaseHelper(context: Context) :
         insertSubjects(db)
         insertStudents(db)
         insertInitialClasses(db)
+        insertSecondSemesterClasses(db)   // must come BEFORE seedStudentSchedules
         seedStudentSchedules(db)
     }
 
@@ -247,11 +261,7 @@ class DatabaseHelper(context: Context) :
         insertSubject(db, "CT-WA 213", "WEB APPLICATION")
         insertSubject(db, "GE-RLW 213", "RIZAL'S LIFE AND WORKS")
         insertSubject(db, "GE-STS 213", "SCIENCE, TECHNOLOGY AND SOCIETY")
-        insertSubject(
-            db,
-            "PE 212",
-            "PHYSICAL ACTIVITIES TOWARDS HEALTH & FITNESS 3-ARNIS (PATHFit 3)"
-        )
+        insertSubject(db, "PE 212", "PHYSICAL ACTIVITIES TOWARDS HEALTH & FITNESS 3-ARNIS (PATHFit 3)")
 
         // SECOND SEMESTER
         insertSubject(db, "IS-DMS 223", "DEPLOYMENT MAINTENANCE AND SERVICES")
@@ -299,36 +309,90 @@ class DatabaseHelper(context: Context) :
         db.insert(TABLE_USERS, null, values)
     }
 
+    private fun studentSeedList(): List<Pair<String, String>> = listOf(
+        "MA-25010881" to "Alab, Sopia C.",
+        "MA-25010908" to "Alfaro, Maxwell James C.",
+        "MA-25010932" to "Alisa, Jasmine Margareth M.",
+        "MA-25011005" to "Almazar, Juliana Maryse M.",
+        "MA-25010945" to "Amor, Ralph Jayrhard G.",
+        "MA-25010946" to "Bacaran, Alexander G.",
+        "MA-25010947" to "Bacsal, Rochelyn P.",
+        "MA-25010948" to "Bautista, Kaye Cel B",
+        "MA-25010949" to "Billalba, Lexter John M.",
+        "MA-25010905" to "Borja, Kristine Joy M.",
+        "MA-25010951" to "Cabrera, Harvey Klaus R.",
+        "MA-25010832" to "Cabuz, Jewell Ace Jhay V.",
+        "MA-25010952" to "Callanta, Jullian Maria M.",
+        "MA-25010953" to "Cayabyab, Kleian B.",
+        "MA-25010954" to "Dela Cruz, Marco J.",
+        "MA-25010955" to "Delara, Bryan T.",
+        "MA-25010660" to "Ebalobo, Jedediah V.",
+        "MA-25010663" to "Espejo, Kyle Russell B.",
+        "MA-25010956" to "Espino, Jerome M.",
+        "MA-25010957" to "Eugenio, John Erick R.",
+        "MA-25010958" to "Eva, Angel T.",
+        "MA-25010928" to "Ferrer, Jacky Rose D.",
+        "MA-25010666" to "Galera, Jhayren",
+        "MA-25010959" to "Gamas, Eva Christine C.",
+        "MA-25010667" to "Garcia, Gabriel Angelo C",
+        "MA-25010695" to "Gumahob, Arnold Yuri O.",
+        "MA-25010696" to "Gural, Calvin John H.",
+        "MA-25010960" to "Isidro, Kristina Cassandra P.",
+        "MA-25010961" to "Lauron, Melissa Faith L.",
+        "MA-25011007" to "Losañez, Jarrell Marcus P.",
+        "MA-25010962" to "Lumba, Aizen R.",
+        "MA-25010963" to "Magluyan",   // PALITAN ng kumpletong pangalan
+        "MA-25010964" to "Marcos, Red Lourence R.",
+        "MA-25010965" to "Maron, Renz Ryan G.",
+        "MA-25010983" to "Navalta, James Laurenz F.",
+        "MA-25010987" to "Oclarit, Aljean L.",
+        "MA-25010927" to "Pascual, Leira C.",
+        "MA-25010989" to "Perez, Raeven M.",
+        "MA-25010779" to "Quirona, Reyver Ceyzer DC.",
+        "MA-25010990" to "Ramos, Diana",
+        "MA-25010991" to "Reyes, Kings Leanne R.",
+        "MA-25010992" to "Rodiel, Rainier James P.",
+        "MA-25010993" to "Ronquillo, Andrea Clarizze M.",
+        "MA-25010995" to "Salvador, Cedrick John",
+        "MA-25010996" to "Santos, Antonette DC.",
+        "MA-25010997" to "Sapitan, Moises Serg G.",
+        "MA-25011009" to "Sauadan, Casie Kate R.",
+        "MA-25010999" to "Talucud, Catherine P.",
+        "MA-25010785" to "Trinidad, Irene P.",
+        "MA-25011000" to "Tumangan, Ericson B.",
+        "MA-25011003" to "Zacarias, Daniel"
+    )
+
     private fun insertStudents(db: SQLiteDatabase) {
-        val students = listOf(
-            "Alab, Sopia C.", "Alfaro, Maxwell James C.", "Alisa, Jasmine Margareth M.",
-            "Almazar, Juliana Maryse M.", "Amor, Ralph Jayrhard G.", "Bacaran, Alexander G.",
-            "Bacsal, Rochelyn P.", "Bautista, Kaye Cel B", "Billalba, Lexter John M.",
-            "Borja, Kristine Joy M.", "Cabrera, Harvey Klaus R.", "Cabuz, Jewell Ace Jhay V.",
-            "Callanta, Jullian Maria M.", "Cayabyab, Kleian B.", "Dela Cruz, Marco J.",
-            "Delara, Bryan T.", "Ebalobo, Jedediah V.", "Espejo, Kyle Russell B.",
-            "Espino, Jerome M.", "Eugenio, John Erick R.", "Eva, Angel T.",
-            "Ferrer, Jacky Rose D.", "Galera, Jhayren", "Gamas, Eva Christine C.",
-            "Garcia, Gabriel Angelo C", "Gumahob, Arnold Yuri O.", "Gural, Calvin John H.",
-            "Isidro, Kristina Cassandra P.", "Lauron, Melissa Faith L.", "Losañez, Jarrell Marcus P.",
-            "Lumba, Aizen R.", "Marcos, Red Lourence R.", "Maron, Renz Ryan G.",
-            "Navalta, James Laurenz F.", "Oclarit, Aljean L.", "Pascual, Leira C.",
-            "Perez, Raeven M.", "Quirona, Reyver Ceyzer DC.", "Ramos, Diana",
-            "Reyes, Kings Leanne R.", "Rodiel, Rainier James P.", "Ronquillo, Andrea Clarizze M.",
-            "Salvador, Cedrick John", "Santos, Antonette DC.", "Sapitan, Moises Serg G.",
-            "Sauadan, Casie Kate R.", "Talucud, Catherine P.", "Trinidad, Irene P.",
-            "Tumangan, Ericson B.", "Zacarias, Daniel"
-        )
-        students.forEachIndexed { index, name ->
-            val studentNumber = String.format("%04d", index + 1)
-            insertUser(db, "STU2026-$studentNumber", name, "STUDENT", SEED_COURSE, SEED_SECTION, "",
-                "student123")
+        for ((id, name) in studentSeedList()) {
+            insertUser(db, id, name, "STUDENT", SEED_COURSE, SEED_SECTION, "", "student123")
         }
+    }
+
+    private fun migrateStudentIds(db: SQLiteDatabase) {
+        for ((newId, name) in studentSeedList()) {
+            // I-rename ang lumang STU2026-xxxx ID ayon sa pangalan
+            db.execSQL(
+                "UPDATE $TABLE_USERS SET user_id = ? " +
+                        "WHERE role = 'STUDENT' AND name = ? AND user_id LIKE 'STU2026-%'",
+                arrayOf(newId, name)
+            )
+
+            // Kung wala pa talaga (hal. si Magluyan), idagdag
+            val c = db.rawQuery("SELECT 1 FROM $TABLE_USERS WHERE user_id = ?", arrayOf(newId))
+            val exists = c.moveToFirst()
+            c.close()
+            if (!exists) {
+                insertUser(db, newId, name, "STUDENT", SEED_COURSE, SEED_SECTION, "", "student123")
+            }
+        }
+        seedStudentSchedules(db) // i-link ang bagong dagdag sa schedule ng section
     }
 
     private fun insertClass(
         db: SQLiteDatabase, facultyId: String, subjectCode: String,
-        time: String, room: String, day: String, course: String
+        time: String, room: String, day: String, course: String,
+        semester: Int = 1
     ) {
         val (start, end) = parseTimeRange(time) ?: Pair(0, 0)
         val values = ContentValues().apply {
@@ -340,7 +404,7 @@ class DatabaseHelper(context: Context) :
             put("start_min", start)
             put("end_min", end)
             put("room", room)
-            put("semester", 1)
+            put("semester", semester)
         }
         db.insert(TABLE_CLASS_SCHEDULE, null, values)
     }
@@ -395,7 +459,58 @@ class DatabaseHelper(context: Context) :
         insertClass(db, kyle, "CT-MAD 213", "2:00 PM - 5:00 PM", "Comlab 2", "Saturday", "BSIS 2D")
     }
 
-    private fun seedStudentSchedules(db: SQLiteDatabase) {
+    private fun insertSecondSemesterClasses(db: SQLiteDatabase) {
+        val kyle = "FAC2026-001"
+        val deserie = "FAC2026-002"
+        val migs = "FAC2026-003"
+        val eroll = "FAC2026-004"
+        val cindy = "FAC2026-005"
+        val christian = "FAC2026-006"
+        val carl = "FAC2026-007"
+        val sem = 2
+
+        // --- BSIS 2A ---
+        insertClass(db, migs, "DM-HRM 323", "10:00 AM - 12:00 PM", "Comlab 3", "Tuesday", "BSIS 2A", sem)
+        insertClass(db, migs, "AD-PT 223", "1:00 PM - 4:00 PM", "Comlab 1", "Tuesday", "BSIS 2A", sem)
+        insertClass(db, eroll, "PE 222", "12:00 PM - 2:00 PM", "AC", "Thursday", "BSIS 2A", sem)
+        insertClass(db, cindy, "GE-Hum 223", "2:00 PM - 5:00 PM", "Butil 1", "Thursday", "BSIS 2A", sem)
+        insertClass(db, deserie, "IS-DMS 223", "10:00 AM - 1:00 PM", "Comlab 3", "Friday", "BSIS 2A", sem)
+        insertClass(db, christian, "GE-Soc 223", "1:00 PM - 4:00 PM", "Science Lab", "Friday", "BSIS 2A", sem)
+        insertClass(db, carl, "GE-Sci 223", "1:00 PM - 4:00 PM", "Comlab 3", "Saturday", "BSIS 2A", sem)
+        insertClass(db, kyle, "CC-ADET 223", "5:00 PM - 8:00 PM", "Comlab 2", "Saturday", "BSIS 2A", sem)
+
+        // --- BSIS 2B ---
+        insertClass(db, migs, "DM-HRM 323", "8:00 AM - 10:00 AM", "Comlab 3", "Tuesday", "BSIS 2B", sem)
+        insertClass(db, migs, "AD-PT 223", "4:00 PM - 7:00 PM", "Comlab 1", "Tuesday", "BSIS 2B", sem)
+        insertClass(db, eroll, "PE 222", "12:00 PM - 2:00 PM", "AC", "Wednesday", "BSIS 2B", sem)
+        insertClass(db, cindy, "GE-Hum 223", "2:00 PM - 5:00 PM", "Butil 1", "Wednesday", "BSIS 2B", sem)
+        insertClass(db, deserie, "IS-DMS 223", "7:00 AM - 10:00 AM", "Comlab 3", "Friday", "BSIS 2B", sem)
+        insertClass(db, christian, "GE-Soc 223", "4:00 PM - 7:00 PM", "Science Lab", "Friday", "BSIS 2B", sem)
+        insertClass(db, carl, "GE-Sci 223", "8:00 AM - 11:00 AM", "Comlab 3", "Saturday", "BSIS 2B", sem)
+        insertClass(db, kyle, "CC-ADET 223", "2:00 PM - 5:00 PM", "Comlab 2", "Saturday", "BSIS 2B", sem)
+
+        // --- BSIS 2C ---
+        insertClass(db, migs, "DM-HRM 323", "10:00 AM - 12:00 PM", "Comlab 1", "Tuesday", "BSIS 2C", sem)
+        insertClass(db, migs, "AD-PT 223", "8:00 AM - 11:00 AM", "Comlab 1", "Wednesday", "BSIS 2C", sem)
+        insertClass(db, eroll, "PE 222", "8:00 AM - 10:00 AM", "AC", "Thursday", "BSIS 2C", sem)
+        insertClass(db, cindy, "GE-Hum 223", "10:00 AM - 1:00 PM", "Butil 1", "Thursday", "BSIS 2C", sem)
+        insertClass(db, deserie, "IS-DMS 223", "10:00 AM - 1:00 PM", "Comlab 3", "Friday", "BSIS 2C", sem)
+        insertClass(db, christian, "GE-Soc 223", "1:00 PM - 4:00 PM", "Science Lab", "Friday", "BSIS 2C", sem)
+        insertClass(db, carl, "GE-Sci 223", "8:00 AM - 11:00 AM", "Comlab 2", "Saturday", "BSIS 2C", sem)
+        insertClass(db, kyle, "CC-ADET 223", "5:00 PM - 8:00 PM", "Comlab 3", "Saturday", "BSIS 2C", sem)
+
+        // --- BSIS 2D ---
+        insertClass(db, migs, "DM-HRM 323", "1:00 PM - 3:00 PM", "Comlab 3", "Tuesday", "BSIS 2D", sem)
+        insertClass(db, migs, "AD-PT 223", "1:00 PM - 4:00 PM", "Comlab 1", "Wednesday", "BSIS 2D", sem)
+        insertClass(db, eroll, "PE 222", "12:00 PM - 2:00 PM", "AC", "Thursday", "BSIS 2D", sem)
+        insertClass(db, cindy, "GE-Hum 223", "2:00 PM - 5:00 PM", "Butil 1", "Thursday", "BSIS 2D", sem)
+        insertClass(db, deserie, "IS-DMS 223", "7:00 AM - 10:00 AM", "Comlab 3", "Friday", "BSIS 2D", sem)
+        insertClass(db, christian, "GE-Soc 223", "4:00 PM - 7:00 PM", "Science Lab", "Friday", "BSIS 2D", sem)
+        insertClass(db, carl, "GE-Sci 223", "8:00 AM - 11:00 AM", "Comlab 3", "Saturday", "BSIS 2D", sem)
+        insertClass(db, kyle, "CC-ADET 223", "2:00 PM - 5:00 PM", "Comlab 2", "Saturday", "BSIS 2D", sem)
+    }
+
+    fun seedStudentSchedules(db: SQLiteDatabase) {
         db.execSQL(
             """
             INSERT OR IGNORE INTO $STUDENT_SCHEDULE (student_id, class_id)
@@ -408,7 +523,7 @@ class DatabaseHelper(context: Context) :
         )
     }
 
-    private fun parseMinutes(s: String): Int? {
+    fun parseMinutes(s: String): Int? {
         val m = Regex("""^\s*(\d{1,2}):(\d{2})\s*([AaPp][Mm])\s*$""").matchEntire(s) ?: return null
         var hour = m.groupValues[1].toInt()
         val minute = m.groupValues[2].toInt()
@@ -427,7 +542,7 @@ class DatabaseHelper(context: Context) :
         return if (end > start) Pair(start, end) else null
     }
 
-    private fun formatTime(totalMin: Int): String {
+    fun formatTime(totalMin: Int): String {
         val h24 = totalMin / 60
         val m = totalMin % 60
         val suffix = if (h24 >= 12) "PM" else "AM"
@@ -435,23 +550,23 @@ class DatabaseHelper(context: Context) :
         return String.format(Locale.US, "%d:%02d %s", h12, m, suffix)
     }
 
-    private fun normalizeDay(day: String): String? =
+    fun normalizeDay(day: String): String? =
         DAYS.firstOrNull { it.equals(day.trim(), ignoreCase = true) }
 
-    private fun normalizeCourse(course: String): String =
+    fun normalizeCourse(course: String): String =
         course.trim().replace(Regex("\\s+"), " ").uppercase(Locale.ROOT)
 
-    private fun existsRow(sql: String, args: Array<String>): Boolean {
+    fun existsRow(sql: String, args: Array<String>): Boolean {
         val cursor = readableDatabase.rawQuery(sql, args)
         val found = cursor.moveToFirst()
         cursor.close()
         return found
     }
 
-    private fun userHasRole(userId: String, role: String): Boolean =
+    fun userHasRole(userId: String, role: String): Boolean =
         existsRow("SELECT 1 FROM $TABLE_USERS WHERE user_id = ? AND role = ?", arrayOf(userId, role))
 
-    private fun hasOverlap(
+    fun hasOverlap(
         column: String, value: String, day: String,
         start: Int, end: Int, semester: Int, excludeId: Long
     ): Boolean = existsRow(
@@ -588,7 +703,7 @@ class DatabaseHelper(context: Context) :
     fun deleteClass(classId: Long): Boolean =
         writableDatabase.delete(TABLE_CLASS_SCHEDULE, "id = ?", arrayOf(classId.toString())) > 0
 
-    private val classSelect = """
+    val classSelect = """
         SELECT c.id, c.subject_code, sub.subject_name, c.time, c.day, c.room,
                u.name AS instructor, c.course, c.faculty_id, c.semester
         FROM $TABLE_CLASS_SCHEDULE c
@@ -596,13 +711,13 @@ class DatabaseHelper(context: Context) :
         LEFT JOIN $TABLE_USERS u ON u.user_id = c.faculty_id
     """.trimIndent()
 
-    private val dayOrder = """
+    val dayOrder = """
         CASE c.day WHEN 'Monday' THEN 1 WHEN 'Tuesday' THEN 2 WHEN 'Wednesday' THEN 3
         WHEN 'Thursday' THEN 4 WHEN 'Friday' THEN 5 WHEN 'Saturday' THEN 6
         WHEN 'Sunday' THEN 7 ELSE 8 END
     """.trimIndent()
 
-    private fun readSchedules(cursor: Cursor): List<ScheduleItem> {
+    fun readSchedules(cursor: Cursor): List<ScheduleItem> {
         val list = mutableListOf<ScheduleItem>()
         while (cursor.moveToNext()) {
             list.add(
@@ -860,6 +975,22 @@ class DatabaseHelper(context: Context) :
             arrayOf(studentId, classId.toString())
         ) > 0
 
+    fun debugDumpGrades(tag: String = "GRADES") {
+        readableDatabase.rawQuery(
+            "SELECT student_id, subject_code, midterm, final, semester FROM $TABLE_GRADES", null
+        ).use { c ->
+            android.util.Log.d(tag, "TOTAL grade rows = ${c.count}")
+            while (c.moveToNext()) {
+                android.util.Log.d(
+                    tag,
+                    "row: student=${c.getString(0)} subj=${c.getString(1)} " +
+                            "mid=${if (c.isNull(2)) "null" else c.getDouble(2)} " +
+                            "fin=${if (c.isNull(3)) "null" else c.getDouble(3)} sem=${c.getInt(4)}"
+                )
+            }
+        }
+    }
+
     fun registerStudent(
         userId: String, name: String, email: String = "", course: String = "",
         section: String = "", birthdate: String = "", address: String = "",
@@ -870,17 +1001,50 @@ class DatabaseHelper(context: Context) :
             return OpResult(false, "Please fill in all required fields")
         }
 
-        if (existsRow("SELECT 1 FROM $TABLE_USERS WHERE user_id = ? COLLATE NOCASE", arrayOf(id))) {
-            return OpResult(false, "User ID already exists")
+        // Kung seeded account na hindi pa na-claim (default password), i-claim ito
+        var claimId: String? = null
+        readableDatabase.rawQuery(
+            "SELECT user_id, role, password FROM $TABLE_USERS WHERE user_id = ? COLLATE NOCASE",
+            arrayOf(id)
+        ).use { c ->
+            if (c.moveToFirst()) {
+                val isUnclaimedSeed = c.getString(1).equals("STUDENT", ignoreCase = true) &&
+                        c.getString(2) == "student123"
+                if (!isUnclaimedSeed || !role.equals("STUDENT", ignoreCase = true)) {
+                    return OpResult(false, "User ID already exists")
+                }
+                claimId = c.getString(0)
+            }
         }
 
+        if (claimId != null) {
+            val claim = ContentValues().apply {
+                put("name", name.trim().replace(Regex("\\s+"), " "))
+                put("email", email)
+                if (course.isNotBlank()) put("course", course.trim())
+                if (section.isNotBlank()) put("section", section.trim())
+                put("birthdate", birthdate)
+                put("address", address)
+                put("campus", campus)
+                put("password", password)
+            }
+            return try {
+                writableDatabase.update(TABLE_USERS, claim, "user_id = ?", arrayOf(claimId!!))
+                linkStudentToSectionClasses(claimId!!)
+                OpResult(true, "Account created")
+            } catch (e: SQLException) {
+                OpResult(false, "Database error: ${e.message}")
+            }
+        }
+
+        // ---- dito na ang dati mong code (hindi ginalaw) ----
         val values = ContentValues().apply {
             put("user_id", id)
-            put("name", name.trim())
+            put("name", name.trim().replace(Regex("\\s+"), " "))
             put("email", email)
             put("role", role)
-            put("course", course)
-            put("section", section)
+            put("course", course.trim())
+            put("section", section.trim())
             put("position", position)
             put("birthdate", birthdate)
             put("address", address)
@@ -899,7 +1063,7 @@ class DatabaseHelper(context: Context) :
         }
     }
 
-    private fun linkStudentToSectionClasses(userId: String) {
+    fun linkStudentToSectionClasses(userId: String) {
         writableDatabase.execSQL(
             """
         INSERT OR IGNORE INTO $STUDENT_SCHEDULE (student_id, class_id)
@@ -913,7 +1077,7 @@ class DatabaseHelper(context: Context) :
         )
     }
 
-    private fun readStudents(cursor: Cursor): List<StudentItem> {
+    fun readStudents(cursor: Cursor): List<StudentItem> {
         val list = mutableListOf<StudentItem>()
         while (cursor.moveToNext()) {
             list.add(
@@ -998,55 +1162,189 @@ class DatabaseHelper(context: Context) :
         return list
     }
 
+    /**
+     * Binabasa ang grade ng isang student sa isang subject at semester.
+     * Ibinabalik ang Pair(midterm, final); null ang bawat isa kung hindi pa naipasok.
+     */
+    fun getGradeValues(studentId: String, subjectCode: String, semester: Int): Pair<Double?, Double?> {
+        val cursor = readableDatabase.rawQuery(
+            "SELECT midterm, final FROM $TABLE_GRADES WHERE student_id = ? AND subject_code = ? AND semester = ?",
+            arrayOf(studentId, subjectCode, semester.toString())
+        )
+        var result: Pair<Double?, Double?> = Pair(null, null)
+        if (cursor.moveToFirst()) {
+            val m = if (cursor.isNull(0)) null else cursor.getDouble(0)
+            val f = if (cursor.isNull(1)) null else cursor.getDouble(1)
+            result = Pair(m, f)
+        }
+        cursor.close()
+        return result
+    }
+
+    fun deleteGrade(studentId: String, subjectCode: String, semester: Int): Boolean =
+        writableDatabase.delete(
+            TABLE_GRADES, "student_id = ? AND subject_code = ? AND semester = ?",
+            arrayOf(studentId, subjectCode, semester.toString())
+        ) > 0
+
+    /**
+     * Blank grades (null) ay NULL ang laman, para ma-differentiate ang tunay na 0 sa "hindi pa naipasok".
+     * Kapag parehong blangko, buburahin ang row.
+     */
     fun saveGrade(
         studentId: String, subjectCode: String, subjectName: String = "",
-        midterm: Double, final: Double, semester: Int
+        midterm: Double?, final: Double?, semester: Int
     ): Boolean {
         val db = writableDatabase
+
+        if (midterm == null && final == null) {
+            db.delete(
+                TABLE_GRADES, "student_id = ? AND subject_code = ? AND semester = ?",
+                arrayOf(studentId, subjectCode, semester.toString())
+            )
+            return true
+        }
+
         val values = ContentValues().apply {
             put("student_id", studentId)
             put("subject_code", subjectCode)
-            put("midterm", midterm)
-            put("final", final)
+            if (midterm != null) put("midterm", midterm) else putNull("midterm")
+            if (final != null) put("final", final) else putNull("final")
             put("semester", semester)
         }
-        val rows = db.update(
-            TABLE_GRADES, values,
-            "student_id = ? AND subject_code = ? AND semester = ?",
-            arrayOf(studentId, subjectCode, semester.toString())
-        )
-        if (rows > 0) return true
-        return db.insert(TABLE_GRADES, null, values) != -1L
+
+        return try {
+            val rows = db.update(
+                TABLE_GRADES, values,
+                "student_id = ? AND subject_code = ? AND semester = ?",
+                arrayOf(studentId, subjectCode, semester.toString())
+            )
+            if (rows > 0) true
+            else db.insertOrThrow(TABLE_GRADES, null, values) != -1L
+        } catch (e: SQLException) {
+            android.util.Log.e("GRADE", "saveGrade failed: $studentId $subjectCode sem=$semester", e)
+            false
+        }
     }
 
+    /**
+     * Lahat ng subject sa schedule ng student para sa semester, kasama ang grade kung meron na.
+     * Kaya laging may lalabas na subject kahit wala pang grade.
+     */
     fun getStudentGrades(studentId: String, semester: Int): List<StudentGrade> {
         val list = mutableListOf<StudentGrade>()
         val cursor = readableDatabase.rawQuery(
             """
-            SELECT g.subject_code, s.subject_name, g.midterm, g.final
-            FROM $TABLE_GRADES g
-            JOIN $TABLE_SUBJECTS s ON s.code = g.subject_code
-            WHERE g.student_id = ? AND g.semester = ?
-            ORDER BY g.subject_code
+            SELECT s.code, s.subject_name, g.midterm, g.final
+            FROM (
+                SELECT DISTINCT c.subject_code AS code
+                FROM $STUDENT_SCHEDULE ss
+                JOIN $TABLE_CLASS_SCHEDULE c ON c.id = ss.class_id
+                WHERE ss.student_id = ? AND c.semester = ?
+                UNION
+                SELECT subject_code AS code
+                FROM $TABLE_GRADES
+                WHERE student_id = ? AND semester = ?
+            ) t
+            JOIN $TABLE_SUBJECTS s ON s.code = t.code
+            LEFT JOIN $TABLE_GRADES g
+              ON g.student_id = ? AND g.subject_code = s.code AND g.semester = ?
+            ORDER BY s.code
             """.trimIndent(),
-            arrayOf(studentId, semester.toString())
+            arrayOf(
+                studentId, semester.toString(),
+                studentId, semester.toString(),
+                studentId, semester.toString()
+            )
         )
         while (cursor.moveToNext()) {
-            list.add(StudentGrade(cursor.getString(0), cursor.getString(1),
-                cursor.getDouble(2), cursor.getDouble(3)))
+            val hasMid = !cursor.isNull(2)
+            val hasFin = !cursor.isNull(3)
+            list.add(
+                StudentGrade(
+                    subjectCode = cursor.getString(0),
+                    subjectName = cursor.getString(1),
+                    midterm = if (hasMid) cursor.getDouble(2) else 0.0,
+                    final = if (hasFin) cursor.getDouble(3) else 0.0,
+                    midtermEntered = hasMid,
+                    finalEntered = hasFin
+                )
+            )
         }
         cursor.close()
         return list
     }
 
+    /** Academic status base sa average. null = wala pang grade. */
+    fun getAcademicStatus(average: Double?): String = when {
+        average == null -> "No Grade"
+        average <= PASSING_MAX -> "Passed"
+        else -> "Failed"
+    }
+
+    /** Average ng lahat ng subject (na may grade) sa isang semester. null kung wala pang grade. */
+    fun getSemesterAverage(studentId: String, semester: Int): Double? {
+        val averages = getStudentGrades(studentId, semester)
+            .filter { it.hasAnyGrade }
+            .map { it.average }
+        return if (averages.isEmpty()) null else averages.sum() / averages.size
+    }
+
+    /** Overall average ng 1st at 2nd semester. null kung wala pang grade. */
+    fun getOverallAverage(studentId: String): Double? {
+        val averages = (1..2).flatMap { sem ->
+            getStudentGrades(studentId, sem).filter { it.hasAnyGrade }.map { it.average }
+        }
+        return if (averages.isEmpty()) null else averages.sum() / averages.size
+    }
+
+    /**
+     * Dating bug: binubura ng onUpgrade ang LAHAT ng table, kasama ang grades, tuwing tataasan ang version.
+     * Ngayon, sine-save muna ang grades at ibinabalik pagkatapos mag-recreate.
+     */
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion >= 25) {
+            migrateStudentIds(db)   // rename lang ng ID, walang binubura
+            return
+        }
+
+        // Lumang code (para sa mga version na mas mababa sa 25)
+        val savedGrades = mutableListOf<ContentValues>()
+        try {
+            db.rawQuery(
+                "SELECT student_id, subject_code, prelim, midterm, final, semester FROM $TABLE_GRADES",
+                null
+            ).use { c ->
+                while (c.moveToNext()) {
+                    savedGrades.add(ContentValues().apply {
+                        put("student_id", c.getString(0))
+                        put("subject_code", c.getString(1))
+                        if (c.isNull(2)) putNull("prelim") else put("prelim", c.getDouble(2))
+                        if (c.isNull(3)) putNull("midterm") else put("midterm", c.getDouble(3))
+                        if (c.isNull(4)) putNull("final") else put("final", c.getDouble(4))
+                        put("semester", c.getInt(5))
+                    })
+                }
+            }
+        } catch (e: SQLException) {
+            // lumang schema na walang grades table o ibang columns; walang maibabalik
+        }
+
         db.execSQL("DROP TABLE IF EXISTS $TABLE_GRADES")
-        db.execSQL("DROP TABLE IF EXISTS student_subjects") // galing sa lumang version
+        db.execSQL("DROP TABLE IF EXISTS student_subjects")
         db.execSQL("DROP TABLE IF EXISTS $STUDENT_SCHEDULE")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_CLASS_SCHEDULE")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_SUBJECTS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_TEACHERS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_USERS")
         onCreate(db)
+
+        for (cv in savedGrades) {
+            try {
+                db.insertWithOnConflict(TABLE_GRADES, null, cv, SQLiteDatabase.CONFLICT_IGNORE)
+            } catch (e: SQLException) {
+                // student o subject na wala na sa bagong data; laktawan
+            }
+        }
     }
 }

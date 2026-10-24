@@ -58,7 +58,7 @@ class ManageSubjectsActivity : AppCompatActivity() {
         autoCompleteSemester.setText(semesterOptions[0], false) // Default value
 
         // Setup Section Filter Options (para sa Schedule Directory)
-        val sectionOptions = arrayOf("All Sections", "BSIS 2A", "BSIS 2B", "BSIS 2C", "BSIS 2D")
+        val sectionOptions = arrayOf("BSIS 2A", "BSIS 2B", "BSIS 2C", "BSIS 2D")
         val sectionAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, sectionOptions)
         autoCompleteSection.setAdapter(sectionAdapter)
         autoCompleteSection.setText(sectionOptions[0], false) // Default value
@@ -110,8 +110,7 @@ class ManageSubjectsActivity : AppCompatActivity() {
         val instructorName = etScheduleInstructor.text.toString().trim()
         val room = etScheduleRoom.text.toString().trim()
 
-        val selectedSection = autoCompleteSection.text.toString()
-        val targetCourse = if (selectedSection.isEmpty() || selectedSection == "All Sections") "BSIS 2C" else selectedSection
+        val targetCourse = autoCompleteSection.text.toString().trim()
 
         // Kunin ang Semester integer value (1 para sa 1st, 2 para sa 2nd, etc.)
         val selectedSemesterStr = autoCompleteSemester.text.toString()
@@ -164,18 +163,11 @@ class ManageSubjectsActivity : AppCompatActivity() {
 
         val semester = getSelectedSemester()
         val selectedSection = autoCompleteSection.text.toString().trim()
-
-        val schedules = if (
-            selectedSection.isEmpty() || selectedSection == "All Sections"
-        ) {
-            dbHelper.getAllClasses(semester)
-        } else {
-            dbHelper.getClassesBySection(selectedSection, semester)
-        }
+        val schedules = dbHelper.getClassesBySection(selectedSection, semester)
 
         if (schedules.isEmpty()) {
             val emptyView = TextView(this).apply {
-                text = "No schedules found for ${autoCompleteSemester.text}."
+                text = "No schedules found for $selectedSection (${autoCompleteSemester.text})."
                 textSize = 14f
                 gravity = Gravity.CENTER
                 setPadding(16, 24, 16, 24)
