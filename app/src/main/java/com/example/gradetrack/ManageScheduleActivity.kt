@@ -42,6 +42,8 @@ class ManageScheduleActivity : AppCompatActivity() {
             return
         }
 
+        FacultyBottomNavHelper.setup(this, facultyId, FacultyBottomNavHelper.Tab.SCHEDULE)
+
         dbHelper = DatabaseHelper(this)
         facultyName = dbHelper.getUserName(facultyId)
         tlManageSchedule = findViewById(R.id.tlManageSchedule)
@@ -138,8 +140,9 @@ class ManageScheduleActivity : AppCompatActivity() {
                 orientation = LinearLayout.VERTICAL
                 layoutParams = TableRow.LayoutParams(0, TableRow.LayoutParams.WRAP_CONTENT, 1.5f)
             }
+            val units = dbHelper.getSubjectUnits(item.subjectCode)
             subjectLayout.addView(TextView(this).apply {
-                text = item.subjectCode
+                text = "${item.subjectCode} ($units Units)"
                 setTextColor(getColor(R.color.text_primary))
                 textSize = 12f
                 setTypeface(null, Typeface.BOLD)

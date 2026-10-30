@@ -1,15 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Deep Navy Theme Inspired by Reference Image -->
-    <color name="primary">#1B2A4A</color>        <!-- Dark Navy Header/Accent -->
-    <color name="primary_dark">#121C33</color>   <!-- Deepest Navy Blue -->
-    <color name="background">#F4F6F9</color>     <!-- Off-White Soft Background -->
-    <color name="card_bg">#FFFFFF</color>        <!-- Clean White Cards -->
-    <color name="accent_blue">#EAF1FA</color>      <!-- Subtle Blue Surface Tint -->
+    <!-- Color Hunt Palette: #E0F8C7, #B7D894, #36415A, #202734 -->
 
-    <!-- Text Colors -->
-    <color name="text_primary">#101828</color>   <!-- Dark Slate -->
-    <color name="text_secondary">#667085</color> <!-- Soft Muted Slate -->
-    <color name="text_light">#D0D5DD</color>     <!-- Soft White/Grey for Header Subtitles -->
-    <color name="border_color">#E4E7EC</color>   <!-- Subtle Card/Input Borders -->
+    <!-- Primary Brand & Header Colors -->
+    <color name="primary">#36415A</color>        <!-- Slate Navy Blue -->
+    <color name="primary_dark">#202734</color>   <!-- Deep Dark Charcoal Navy -->
+
+    <!-- Accents & Highlights -->
+    <color name="accent_green">#B7D894</color>   <!-- Sage Green Accent -->
+    <color name="accent_light">#E0F8C7</color>   <!-- Pale Mint Light Tint -->
+    <color name="accent_blue">#E0F8C7</color>    <!-- Soft Surface Accent Tint -->
+
+    <!-- Backgrounds -->
+    <color name="background">#F3F7F0</color>     <!-- Soft Light Palette Background -->
+    <color name="card_bg">#FFFFFF</color>        <!-- Card White Background -->
+
+    <!-- Text & Typography Colors -->
+    <color name="text_primary">#202734</color>   <!-- Primary Text (Deep Charcoal Navy) -->
+    <color name="text_secondary">#36415A</color> <!-- Secondary Text (Slate Navy) -->
+    <color name="text_light">#E0F8C7</color>     <!-- Header Subtitle Text (Pale Mint) -->
+    <color name="text_accent">#B7D894</color>    <!-- Highlight / Label Accent (Sage Green) -->
+    <color name="border_color">#D8E5CE</color>   <!-- Soft Harmonized Borders -->
 </resources>

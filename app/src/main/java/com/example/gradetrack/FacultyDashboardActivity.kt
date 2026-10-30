@@ -2,7 +2,7 @@ package com.example.gradetrack
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
@@ -23,31 +23,10 @@ class FacultyDashboardActivity : AppCompatActivity() {
             return
         }
 
-        findViewById<Button>(R.id.btnManageStudents).setOnClickListener {
-            startActivity(Intent(this, ManageStudentsActivity::class.java).apply {
-                putExtra("FACULTY_ID", facultyId)
-            })
-        }
+        // Shared bottom navigation bar setup
+        FacultyBottomNavHelper.setup(this, facultyId, null)
 
-        findViewById<Button>(R.id.btnManageSubjects).setOnClickListener {
-            startActivity(Intent(this, ManageSubjectsActivity::class.java).apply {
-                putExtra("FACULTY_ID", facultyId)
-            })
-        }
-
-        findViewById<Button>(R.id.btnManageGrade).setOnClickListener {
-            startActivity(Intent(this, GradeManagementActivity::class.java).apply {
-                putExtra("FACULTY_ID", facultyId)
-            })
-        }
-
-        findViewById<Button>(R.id.btnManageSchedule).setOnClickListener {
-            startActivity(Intent(this, ManageScheduleActivity::class.java).apply {
-                putExtra("FACULTY_ID", facultyId)
-            })
-        }
-
-        findViewById<Button>(R.id.btnLogout).setOnClickListener { logout() }
+        findViewById<View>(R.id.btnLogout).setOnClickListener { logout() }
     }
 
     private fun logout() {

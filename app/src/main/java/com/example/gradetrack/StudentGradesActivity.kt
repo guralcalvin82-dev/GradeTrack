@@ -28,8 +28,6 @@ class StudentGradesActivity : AppCompatActivity() {
     private lateinit var tvSemesterAverage: TextView
     private lateinit var tvStatus: TextView
 
-    private lateinit var btnBack: Button
-
     private var currentStudentId = ""
     private var selectedSemester = 1
 
@@ -42,8 +40,6 @@ class StudentGradesActivity : AppCompatActivity() {
         dbHelper = DatabaseHelper(this)
 
         initializeViews()
-
-        btnBack.setOnClickListener { finish() }
 
         btnSem1.setOnClickListener {
             selectedSemester = 1
@@ -58,6 +54,9 @@ class StudentGradesActivity : AppCompatActivity() {
         }
 
         currentStudentId = resolveStudentId()
+
+        // Bottom navigation bar (Home / Grades / Schedule / Profile)
+        BottomNavHelper.setup(this, currentStudentId, BottomNavHelper.Tab.GRADES)
 
         if (currentStudentId.isEmpty()) {
             Toast.makeText(this, "Student account not found.", Toast.LENGTH_LONG).show()
@@ -87,7 +86,6 @@ class StudentGradesActivity : AppCompatActivity() {
         layoutGradesContainer = findViewById(R.id.layoutGradesContainer)
         tvSemesterAverage = findViewById(R.id.tvSemesterAverage)
         tvStatus = findViewById(R.id.tvStatus)
-        btnBack = findViewById(R.id.btnBack)
     }
 
     /**
@@ -179,7 +177,6 @@ class StudentGradesActivity : AppCompatActivity() {
         }
     }
 
-
     private fun loadGrades() {
         layoutGradesContainer.removeAllViews()
 
@@ -228,19 +225,10 @@ class StudentGradesActivity : AppCompatActivity() {
         if (evaluatedSubjectsCount > 0) {
             val finalSemesterAverage = totalSemesterAverage / evaluatedSubjectsCount
             tvSemesterAverage.text = String.format(Locale.US, "%.2f", finalSemesterAverage)
-
-            if (evaluatedSubjectsCount > 0) {
-                val finalSemesterAverage = totalSemesterAverage / evaluatedSubjectsCount
-                tvSemesterAverage.text = String.format(Locale.US, "%.2f", finalSemesterAverage)
-                applyStatus(tvStatus, finalSemesterAverage)
-            } else {
-                tvSemesterAverage.text = "--"
-                applyStatus(tvStatus, null)
-            }
+            applyStatus(tvStatus, finalSemesterAverage)
         } else {
             tvSemesterAverage.text = "--"
-            tvStatus.text = "NO GRADES"
-            tvStatus.setTextColor(Color.GRAY)
+            applyStatus(tvStatus, null)
         }
     }
 
@@ -263,8 +251,9 @@ class StudentGradesActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_VERTICAL
         }
 
+        val units = dbHelper.getSubjectUnits(grade.subjectCode)
         val subjectName = TextView(this).apply {
-            text = grade.subjectName
+            text = "${grade.subjectName} ($units Units)"
             textSize = 15f
             setTextColor(color(R.color.text_primary))
             setTypeface(null, Typeface.BOLD)

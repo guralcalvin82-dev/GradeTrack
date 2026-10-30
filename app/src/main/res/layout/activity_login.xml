@@ -11,45 +11,44 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingHorizontal="32dp"
+        android:paddingVertical="24dp">
 
+        <!-- Logo -->
         <ImageView
             android:id="@+id/logoImageView"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
             android:layout_marginBottom="16dp"
-            android:contentDescription="LOGO"
-            android:src="@drawable/app_logo"
             android:background="@drawable/image_border"
-            android:padding="8dp" />
+            android:contentDescription="GradeTrack Logo"
+            android:padding="12dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/app_logo" />
 
+        <!-- Title -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Grade Track"
+            android:layout_marginBottom="32dp"
+            android:text="GradeTrack"
             android:textColor="@color/text_primary"
-            android:textSize="24sp"
+            android:textSize="26sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="28dp"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
-
+        <!-- User ID Input -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:boxBackgroundColor="@color/card_bg"
-            app:boxCornerRadiusBottomEnd="16dp"
-            app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusTopEnd="16dp"
-            app:boxCornerRadiusTopStart="16dp"
+            app:boxCornerRadiusBottomEnd="28dp"
+            app:boxCornerRadiusBottomStart="28dp"
+            app:boxCornerRadiusTopEnd="28dp"
+            app:boxCornerRadiusTopStart="28dp"
             app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/primary">
+            app:hintTextColor="@color/text_secondary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etUserId"
@@ -57,22 +56,24 @@
                 android:layout_height="wrap_content"
                 android:hint="User ID"
                 android:inputType="text"
+                android:paddingVertical="14dp"
                 android:textColor="@color/text_primary" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Password Input -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:boxBackgroundColor="@color/card_bg"
-            app:boxCornerRadiusBottomEnd="16dp"
-            app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusTopEnd="16dp"
-            app:boxCornerRadiusTopStart="16dp"
+            app:boxCornerRadiusBottomEnd="28dp"
+            app:boxCornerRadiusBottomStart="28dp"
+            app:boxCornerRadiusTopEnd="28dp"
+            app:boxCornerRadiusTopStart="28dp"
             app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/primary"
+            app:hintTextColor="@color/text_secondary"
             app:passwordToggleEnabled="true"
-            app:passwordToggleTint="@color/primary">
+            app:passwordToggleTint="@color/text_secondary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
@@ -80,41 +81,47 @@
                 android:layout_height="wrap_content"
                 android:hint="Password"
                 android:inputType="textPassword"
+                android:paddingVertical="14dp"
                 android:textColor="@color/text_primary" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Forgot Password Link -->
         <TextView
             android:id="@+id/tvForgotPassword"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:padding="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
             android:text="Forgot Password?"
-            android:textColor="@color/primary"
-            android:textStyle="bold" />
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
 
+        <!-- Log In Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogin"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="16dp"
             android:backgroundTint="@color/primary"
-            android:elevation="4dp"
+            android:letterSpacing="0.05"
             android:text="LOG IN"
-            android:letterSpacing="0.03"
+            android:textColor="#FFFFFF"
             android:textSize="16sp"
             android:textStyle="bold"
             app:cornerRadius="28dp"
-            app:rippleColor="#33FFFFFF" />
+            app:elevation="0dp" />
 
+        <!-- Create Account Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCreateAccount"
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Create Account"
+            android:layout_marginTop="12dp"
+            android:letterSpacing="0.05"
+            android:text="CREATE ACCOUNT"
             android:textColor="@color/primary"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
     </LinearLayout>

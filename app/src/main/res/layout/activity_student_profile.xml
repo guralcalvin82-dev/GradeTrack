@@ -7,55 +7,28 @@
     android:background="@color/background"
     android:orientation="vertical">
 
-    <!-- Executive Header Section -->
+    <!-- Header -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary_dark"
         android:paddingHorizontal="24dp"
         android:paddingTop="32dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="18dp">
 
-        <!-- Transparent Back Action Button on the Left -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnBack"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_marginEnd="12dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:padding="0dp"
-            app:icon="@drawable/ic_arrow_back"
-            app:iconGravity="textStart"
-            app:iconTint="@android:color/white"
-            app:backgroundTint="@android:color/transparent"
-            app:rippleColor="#33FFFFFF"
-            tools:ignore="SpeakableTextPresentCheck" />
-
-        <!-- Header Title to the Right of the Back Button -->
-        <LinearLayout
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/btnBack"
-            android:layout_centerVertical="true"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Student Profile"
-                android:textColor="@android:color/white"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+            android:text="Student Profile"
+            android:textColor="@android:color/white"
+            android:textSize="22sp"
+            android:textStyle="bold" />
     </RelativeLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:scrollbars="none">
 
         <LinearLayout
@@ -64,14 +37,14 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Profile Avatar & Overview Badge Card -->
+            <!-- Avatar & Overview Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/card_bg"
+                app:cardBackgroundColor="@color/primary"
                 app:cardCornerRadius="18dp"
-                app:cardElevation="2dp">
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -80,30 +53,57 @@
                     android:orientation="vertical"
                     android:padding="24dp">
 
-                    <!-- Avatar Circle Placeholder with Initials/Icon -->
+                    <!-- Profile Picture Circle Container -->
                     <androidx.cardview.widget.CardView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:layout_marginBottom="12dp"
-                        app:cardBackgroundColor="@color/accent_blue"
-                        app:cardCornerRadius="40dp"
-                        app:cardElevation="0dp">
+                        android:id="@+id/cardProfilePic"
+                        android:layout_width="88dp"
+                        android:layout_height="88dp"
+                        android:layout_marginBottom="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardBackgroundColor="@color/accent_light"
+                        app:cardCornerRadius="44dp"
+                        app:cardElevation="2dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:text="GT"
-                            android:textColor="@color/primary_dark"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <ImageView
+                                android:id="@+id/ivStudentProfilePic"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:visibility="gone"
+                                tools:ignore="ContentDescription" />
+
+                            <TextView
+                                android:id="@+id/tvAvatarInitials"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="GT"
+                                android:textColor="@color/primary_dark"
+                                android:textSize="28sp"
+                                android:textStyle="bold" />
+                        </FrameLayout>
                     </androidx.cardview.widget.CardView>
+
+                    <TextView
+                        android:id="@+id/tvChangePhoto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:text="📷 Tap to Change Photo"
+                        android:textColor="@color/text_light"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvHeaderName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@android:color/white"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         tools:text="Juan Dela Cruz" />
@@ -113,13 +113,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="@color/text_light"
                         android:textSize="13sp"
                         tools:text="BS Information Systems • BSIS 2C" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Detailed Profile Information Card -->
+            <!-- Personal Information Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -133,7 +133,6 @@
                     android:orientation="vertical"
                     android:padding="20dp">
 
-                    <!-- Section Title -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -144,7 +143,7 @@
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
-                    <!-- Name Row -->
+                    <!-- Full Name -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -190,7 +189,7 @@
                         android:layout_marginVertical="12dp"
                         android:background="@color/border_color" />
 
-                    <!-- Student ID Row -->
+                    <!-- Student ID -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -236,7 +235,7 @@
                         android:layout_marginVertical="12dp"
                         android:background="@color/border_color" />
 
-                    <!-- Course Row -->
+                    <!-- Course & Department -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -260,7 +259,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Course Program"
+                                android:text="Course &amp; Department"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11sp" />
 
@@ -282,7 +281,7 @@
                         android:layout_marginVertical="12dp"
                         android:background="@color/border_color" />
 
-                    <!-- Birthdate Row -->
+                    <!-- Contact Number -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -293,7 +292,7 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_marginEnd="16dp"
-                            android:src="@android:drawable/ic_menu_month"
+                            android:src="@android:drawable/ic_menu_call"
                             app:tint="@color/primary_dark"
                             tools:ignore="ContentDescription" />
 
@@ -306,19 +305,19 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Birthdate"
+                                android:text="Contact Number"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11sp" />
 
                             <TextView
-                                android:id="@+id/tvBirthdate"
+                                android:id="@+id/tvContactNum"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:textColor="@color/text_primary"
                                 android:textSize="14sp"
                                 android:textStyle="bold"
-                                tools:text="2005-08-15" />
+                                tools:text="09123456789" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -328,7 +327,7 @@
                         android:layout_marginVertical="12dp"
                         android:background="@color/border_color" />
 
-                    <!-- Address Row -->
+                    <!-- Home Address -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -352,7 +351,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Address"
+                                android:text="Home Address"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11sp" />
 
@@ -374,7 +373,7 @@
                         android:layout_marginVertical="12dp"
                         android:background="@color/border_color" />
 
-                    <!-- Email Row -->
+                    <!-- Email Address -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -414,55 +413,150 @@
                         </LinearLayout>
                     </LinearLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="12dp"
-                        android:background="@color/border_color" />
-
-                    <!-- Campus Row -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:layout_marginEnd="16dp"
-                            android:src="@android:drawable/ic_menu_compass"
-                            app:tint="@color/primary_dark"
-                            tools:ignore="ContentDescription" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Campus"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="11sp" />
-
-                            <TextView
-                                android:id="@+id/tvCampus"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:textColor="@color/primary"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                tools:text="Main Campus" />
-                        </LinearLayout>
-                    </LinearLayout>
-
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
+
+            <!-- Logout -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:layout_marginTop="24dp"
+                android:gravity="center"
+                android:text="Logout Account"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:backgroundTint="#EF4444"
+                app:cornerRadius="14dp" />
         </LinearLayout>
     </ScrollView>
+
+    <!-- Bottom navigation bar -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border_color" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/card_bg"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <LinearLayout
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                app:tint="@color/text_secondary"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Home"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnMyGrades"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_grades"
+                app:tint="@color/text_secondary"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Grades"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnSchedule"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_schedule"
+                app:tint="@color/text_secondary"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Schedule"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnProfile"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_profile"
+                app:tint="@color/primary"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Profile"
+                android:textColor="@color/primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

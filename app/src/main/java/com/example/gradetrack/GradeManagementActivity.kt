@@ -63,12 +63,16 @@ class GradeManagementActivity : AppCompatActivity() {
     )
 
     private val gradeRowList = mutableListOf<GradeRowData>()
+    private var facultyId: String = ""
 
     private fun color(id: Int) = ContextCompat.getColor(this, id)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_grade_management)
+
+        facultyId = intent.getStringExtra("FACULTY_ID")?.trim().orEmpty()
+        FacultyBottomNavHelper.setup(this, facultyId, FacultyBottomNavHelper.Tab.GRADES)
 
         dbHelper = DatabaseHelper(this)
 
@@ -238,10 +242,11 @@ class GradeManagementActivity : AppCompatActivity() {
                 setOnClickListener {
                     selectedSubjectCode = code
                     selectedSubjectName = name
+                    val units = dbHelper.getSubjectUnits(code)
                     tvGradeHeader.text =
                         "Section: $selectedSection\n" +
                                 "Semester: ${if (selectedSemester == 1) "1st" else "2nd"} Semester\n" +
-                                "Subject: $code – $name"
+                                "Subject: $code – $name ($units Units)"
                     loadGradeEntryRows(selectedSemester, code)
                     showStep(4)
                 }
@@ -251,8 +256,9 @@ class GradeManagementActivity : AppCompatActivity() {
                 orientation = LinearLayout.VERTICAL
             }
 
+            val units = dbHelper.getSubjectUnits(code)
             val tvCode = TextView(this).apply {
-                text = code
+                text = "$code ($units Units)"
                 textSize = 16f
                 setTextColor(color(R.color.text_primary))
                 setTypeface(null, Typeface.BOLD)

@@ -38,10 +38,11 @@ class StudentScheduleActivity : AppCompatActivity() {
             ?: intent.getStringExtra("user_id")
                     ?: ""
 
-        findViewById<MaterialButton>(R.id.btnBack).setOnClickListener { finish() }
-
         btnSem1.setOnClickListener { selectSemester(1) }
         btnSem2.setOnClickListener { selectSemester(2) }
+
+        // Bottom navigation bar (Home / Grades / Schedule / Profile)
+        BottomNavHelper.setup(this, studentId, BottomNavHelper.Tab.SCHEDULE)
 
         selectSemester(1)
     }
@@ -101,9 +102,10 @@ class StudentScheduleActivity : AppCompatActivity() {
 
             row.addView(createCell("${item.day}\n${item.time}", weights[0], Gravity.START))
 
+            val units = dbHelper.getSubjectUnits(item.subjectCode)
             val subjectText = if (item.subjectName.isNotBlank()) {
-                "${item.subjectCode}\n${item.subjectName}"
-            } else item.subjectCode
+                "${item.subjectCode}\n${item.subjectName} ($units Units)"
+            } else "${item.subjectCode} ($units Units)"
             row.addView(createCell(subjectText, weights[1], Gravity.START))
 
             row.addView(createCell(item.instructor.ifBlank { "Not assigned" }, weights[2], Gravity.START))

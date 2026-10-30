@@ -7,26 +7,25 @@
     android:background="@color/background"
     android:orientation="vertical">
 
-    <!-- Executive Header Section -->
-    <RelativeLayout
+    <!-- Header -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary_dark"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingHorizontal="24dp"
         android:paddingTop="32dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="18dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
             android:orientation="vertical">
-
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
                 android:text="Student Dashboard"
                 android:textColor="@android:color/white"
                 android:textSize="22sp"
@@ -36,14 +35,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textColor="#A0B2CE"
+                android:textColor="@color/text_light"
                 android:textSize="12sp" />
         </LinearLayout>
-    </RelativeLayout>
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:scrollbars="none">
 
         <LinearLayout
@@ -52,7 +52,7 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Featured Header Banner (Deep Blue Academic Summary) -->
+            <!-- Academic Summary Card -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -71,11 +71,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="14dp"
+                        android:letterSpacing="0.08"
                         android:text="ACADEMIC SUMMARY"
-                        android:textColor="#8AB4F8"
+                        android:textColor="@color/text_accent"
                         android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.08" />
+                        android:textStyle="bold" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -93,7 +93,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="1st Semester"
-                                android:textColor="#93C5FD"
+                                android:textColor="@color/text_light"
                                 android:textSize="12sp" />
 
                             <TextView
@@ -117,7 +117,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="2nd Semester"
-                                android:textColor="#93C5FD"
+                                android:textColor="@color/text_light"
                                 android:textSize="12sp" />
 
                             <TextView
@@ -170,28 +170,17 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Quick Actions Label -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:text="QUICK NAVIGATION"
-                android:textColor="@color/primary_dark"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08" />
-
-            <!-- My Grades Quick Action Button -->
+            <!-- Print Grades -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnMyGrades"
+                android:id="@+id/btnPrintGrades"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="8dp"
                 android:gravity="start|center_vertical"
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp"
-                android:text="My Grades"
+                android:text="Print Grades"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -200,58 +189,131 @@
                 app:strokeColor="@color/border_color"
                 app:strokeWidth="1dp" />
 
-            <!-- Schedule Quick Action Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSchedule"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginBottom="12dp"
-                android:gravity="start|center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:text="Schedule"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:backgroundTint="@color/card_bg"
-                app:cornerRadius="14dp"
-                app:strokeColor="@color/border_color"
-                app:strokeWidth="1dp" />
-
-            <!-- Profile Quick Action Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnProfile"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginBottom="24dp"
-                android:gravity="start|center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:text="Profile"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:backgroundTint="@color/card_bg"
-                app:cornerRadius="14dp"
-                app:strokeColor="@color/border_color"
-                app:strokeWidth="1dp" />
-
-            <!-- Logout Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLogout"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:gravity="center"
-                android:text="Logout Account"
-                android:textColor="@android:color/white"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:backgroundTint="#EF4444"
-                app:cornerRadius="14dp" />
 
         </LinearLayout>
     </ScrollView>
+
+    <!-- Bottom navigation bar (same IDs as the old buttons, so your Kotlin code still works) -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border_color" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/card_bg"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <LinearLayout
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                app:tint="@color/primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Home"
+                android:textColor="@color/primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnMyGrades"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_grades"
+                app:tint="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Grades"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnSchedule"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_schedule"
+                app:tint="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Schedule"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnProfile"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_profile"
+                app:tint="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Profile"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

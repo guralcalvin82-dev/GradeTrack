@@ -29,10 +29,14 @@ class ManageSubjectsActivity : AppCompatActivity() {
     private lateinit var autoCompleteSection: AutoCompleteTextView
 
     private var editingClassId = -1L
+    private var facultyId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_manage_subjects)
+
+        facultyId = intent.getStringExtra("FACULTY_ID")?.trim().orEmpty()
+        FacultyBottomNavHelper.setup(this, facultyId, FacultyBottomNavHelper.Tab.SUBJECTS)
 
         dbHelper = DatabaseHelper(this)
 
@@ -210,7 +214,8 @@ class ManageSubjectsActivity : AppCompatActivity() {
             // TIME
             addCell(row, "${item.day}\n${item.time}", 1.1f)
             // SUBJECT
-            addCell(row, "${item.subjectCode}\n${item.subjectName}", 1.1f, true)
+            val units = dbHelper.getSubjectUnits(item.subjectCode)
+            addCell(row, "${item.subjectCode}\n${item.subjectName} ($units Units)", 1.1f, true)
             // INSTRUCTOR
             addCell(row, item.instructor.ifBlank { "Unassigned" }, 1.2f)
             // ROOM

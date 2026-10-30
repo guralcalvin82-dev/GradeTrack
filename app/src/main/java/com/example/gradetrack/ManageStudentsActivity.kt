@@ -11,10 +11,14 @@ class ManageStudentsActivity : AppCompatActivity() {
 
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var tlStudents: TableLayout
+    private var facultyId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_manage_students)
+
+        facultyId = intent.getStringExtra("FACULTY_ID")?.trim().orEmpty()
+        FacultyBottomNavHelper.setup(this, facultyId, FacultyBottomNavHelper.Tab.STUDENTS)
 
         dbHelper = DatabaseHelper(this)
         tlStudents = findViewById(R.id.tlStudents)

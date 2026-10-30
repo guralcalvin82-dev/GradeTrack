@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import java.util.Locale
 import android.database.SQLException
+import android.util.Log
 
 /**
  * midtermEntered / finalEntered = true kapag may tunay na grade na naipasok
@@ -98,11 +99,36 @@ class DatabaseHelper(context: Context) :
         db.setForeignKeyConstraintsEnabled(true)
     }
 
-    override fun onOpen(db: SQLiteDatabase) {
-        super.onOpen(db)
-        if (!db.isReadOnly) insertSubjects(db)
+    private fun checkAndUpdateColumns(db: SQLiteDatabase) {
+        try {
+            val columns = mutableSetOf<String>()
+            db.rawQuery("PRAGMA table_info($TABLE_USERS)", null).use { cursor ->
+                while (cursor.moveToNext()) {
+                    columns.add(cursor.getString(cursor.getColumnIndexOrThrow("name")))
+                }
+            }
+            if (!columns.contains("contact_num")) {
+                db.execSQL("ALTER TABLE $TABLE_USERS ADD COLUMN contact_num TEXT")
+            }
+            if (!columns.contains("department")) {
+                db.execSQL("ALTER TABLE $TABLE_USERS ADD COLUMN department TEXT")
+            }
+            if (!columns.contains("image_uri")) {
+                db.execSQL("ALTER TABLE $TABLE_USERS ADD COLUMN image_uri TEXT")
+            }
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Error checking/updating table columns", e)
+        }
     }
 
+    override fun onOpen(db: SQLiteDatabase) {
+        super.onOpen(db)
+        if (!db.isReadOnly) {
+            checkAndUpdateColumns(db)
+            insertSubjects(db)
+            ensureAdminExists(db)
+        }
+    }
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -119,6 +145,9 @@ class DatabaseHelper(context: Context) :
                 address TEXT,
                 email TEXT,
                 campus TEXT,
+                contact_num TEXT,
+                department TEXT,
+                image_uri TEXT,
                 password TEXT NOT NULL
             )
             """.trimIndent()
@@ -210,6 +239,7 @@ class DatabaseHelper(context: Context) :
         insertInitialClasses(db)
         insertSecondSemesterClasses(db)   // must come BEFORE seedStudentSchedules
         seedStudentSchedules(db)
+        ensureAdminExists(db)
     }
 
     fun getFacultyIdByName(name: String): String? {
@@ -629,6 +659,15 @@ class DatabaseHelper(context: Context) :
         val name = if (cursor.moveToFirst()) cursor.getString(0) else ""
         cursor.close()
         return name
+    }
+
+    fun getSubjectUnits(code: String): Int {
+        val cursor = readableDatabase.rawQuery(
+            "SELECT units FROM $TABLE_SUBJECTS WHERE code = ?", arrayOf(code)
+        )
+        val units = if (cursor.moveToFirst()) cursor.getInt(0) else 3
+        cursor.close()
+        return units
     }
 
     fun addClass(
@@ -1233,30 +1272,26 @@ class DatabaseHelper(context: Context) :
      */
     fun getStudentGrades(studentId: String, semester: Int): List<StudentGrade> {
         val list = mutableListOf<StudentGrade>()
-        val cursor = readableDatabase.rawQuery(
-            """
+        val targetCodes = if (semester == 1) {
+            listOf("CC-IM 213", "CC-DSA 213", "IS-DCN 213", "CT-MAD 213", "CT-WA 213", "GE-RLW 213", "GE-STS 213", "PE 212")
+        } else {
+            listOf("IS-DMS 223", "DM-HRM 323", "AD-PT 223", "GE-Hum 223", "GE-Soc 223", "GE-Sci 223", "CC-ADET 223", "PE 222")
+        }
+
+        val placeholders = targetCodes.joinToString(",") { "?" }
+        val queryArgs = mutableListOf(studentId, semester.toString())
+        queryArgs.addAll(targetCodes)
+
+        val sql = """
             SELECT s.code, s.subject_name, g.midterm, g.final
-            FROM (
-                SELECT DISTINCT c.subject_code AS code
-                FROM $STUDENT_SCHEDULE ss
-                JOIN $TABLE_CLASS_SCHEDULE c ON c.id = ss.class_id
-                WHERE ss.student_id = ? AND c.semester = ?
-                UNION
-                SELECT subject_code AS code
-                FROM $TABLE_GRADES
-                WHERE student_id = ? AND semester = ?
-            ) t
-            JOIN $TABLE_SUBJECTS s ON s.code = t.code
+            FROM $TABLE_SUBJECTS s
             LEFT JOIN $TABLE_GRADES g
               ON g.student_id = ? AND g.subject_code = s.code AND g.semester = ?
+            WHERE s.code IN ($placeholders)
             ORDER BY s.code
-            """.trimIndent(),
-            arrayOf(
-                studentId, semester.toString(),
-                studentId, semester.toString(),
-                studentId, semester.toString()
-            )
-        )
+        """.trimIndent()
+
+        val cursor = readableDatabase.rawQuery(sql, queryArgs.toTypedArray())
         while (cursor.moveToNext()) {
             val hasMid = !cursor.isNull(2)
             val hasFin = !cursor.isNull(3)
@@ -1346,5 +1381,209 @@ class DatabaseHelper(context: Context) :
                 // student o subject na wala na sa bagong data; laktawan
             }
         }
+    }
+
+    // --- ADMIN HELPER METHODS ---
+
+    fun ensureAdminExists(db: SQLiteDatabase = writableDatabase) {
+        try {
+            val cursor = db.rawQuery(
+                "SELECT 1 FROM $TABLE_USERS WHERE UPPER(user_id) = 'ADMIN' OR role = 'ADMIN'",
+                null
+            )
+            val exists = cursor.moveToFirst()
+            cursor.close()
+
+            if (!exists) {
+                val values = ContentValues().apply {
+                    put("user_id", "ADMIN")
+                    put("name", "System Administrator")
+                    put("role", "ADMIN")
+                    put("course", "Administration")
+                    put("position", "System Admin")
+                    put("email", "admin@bpc.edu.ph")
+                    put("password", "ADMIN01")
+                }
+                db.insertWithOnConflict(TABLE_USERS, null, values, SQLiteDatabase.CONFLICT_IGNORE)
+            }
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Failed to ensure admin exists", e)
+        }
+    }
+
+    data class DeptStudentCount(val department: String, val count: Int)
+
+    fun getDepartmentStudentCounts(): List<DeptStudentCount> {
+        val list = mutableListOf<DeptStudentCount>()
+        val db = readableDatabase
+        db.rawQuery(
+            """
+            SELECT CASE WHEN UPPER(TRIM(COALESCE(course,''))) = '' THEN 'Unassigned' ELSE UPPER(TRIM(course)) END AS dept,
+                   COUNT(*) AS student_count
+            FROM $TABLE_USERS
+            WHERE role = 'STUDENT'
+            GROUP BY dept
+            ORDER BY student_count DESC, dept ASC
+            """.trimIndent(),
+            null
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                list.add(DeptStudentCount(cursor.getString(0), cursor.getInt(1)))
+            }
+        }
+        return list
+    }
+
+    data class AccountSummaryCounts(val totalStudents: Int, val totalFaculty: Int, val totalAdmins: Int, val totalUsers: Int)
+
+    fun getAccountSummaryCounts(): AccountSummaryCounts {
+        var students = 0
+        var faculty = 0
+        var admins = 0
+        var total = 0
+        val db = readableDatabase
+        db.rawQuery(
+            """
+            SELECT role, COUNT(*) 
+            FROM $TABLE_USERS 
+            GROUP BY role
+            """.trimIndent(),
+            null
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                val role = cursor.getString(0)?.uppercase() ?: ""
+                val cnt = cursor.getInt(1)
+                total += cnt
+                when (role) {
+                    "STUDENT" -> students += cnt
+                    "FACULTY" -> faculty += cnt
+                    "ADMIN" -> admins += cnt
+                }
+            }
+        }
+        return AccountSummaryCounts(students, faculty, admins, total)
+    }
+
+    data class UserAccountItem(
+        val id: Long,
+        val userId: String,
+        val name: String,
+        val role: String,
+        val course: String,
+        val section: String,
+        val position: String,
+        val email: String,
+        val password: String,
+        val contactNum: String = "",
+        val department: String = "",
+        val address: String = "",
+        val imageUri: String = ""
+    )
+
+    fun getAllUserAccounts(roleFilter: String = "ALL", searchQuery: String = ""): List<UserAccountItem> {
+        val list = mutableListOf<UserAccountItem>()
+        val db = readableDatabase
+        val selectionList = mutableListOf<String>()
+        val selectionArgs = mutableListOf<String>()
+
+        if (!roleFilter.equals("ALL", ignoreCase = true)) {
+            selectionList.add("role = ?")
+            selectionArgs.add(roleFilter.uppercase())
+        }
+
+        if (searchQuery.isNotBlank()) {
+            val q = "%${searchQuery.trim().lowercase()}%"
+            selectionList.add("(LOWER(user_id) LIKE ? OR LOWER(name) LIKE ? OR LOWER(COALESCE(course,'')) LIKE ? OR LOWER(COALESCE(email,'')) LIKE ?)")
+            selectionArgs.add(q)
+            selectionArgs.add(q)
+            selectionArgs.add(q)
+            selectionArgs.add(q)
+        }
+
+        val whereClause = if (selectionList.isNotEmpty()) "WHERE " + selectionList.joinToString(" AND ") else ""
+        val sql = "SELECT id, user_id, name, role, COALESCE(course,''), COALESCE(section,''), COALESCE(position,''), COALESCE(email,''), password, COALESCE(contact_num,''), COALESCE(department,''), COALESCE(address,''), COALESCE(image_uri,'') FROM $TABLE_USERS $whereClause ORDER BY role ASC, name ASC"
+
+        db.rawQuery(sql, selectionArgs.toTypedArray()).use { cursor ->
+            while (cursor.moveToNext()) {
+                list.add(
+                    UserAccountItem(
+                        id = cursor.getLong(0),
+                        userId = cursor.getString(1),
+                        name = cursor.getString(2),
+                        role = cursor.getString(3),
+                        course = cursor.getString(4),
+                        section = cursor.getString(5),
+                        position = cursor.getString(6),
+                        email = cursor.getString(7),
+                        password = cursor.getString(8),
+                        contactNum = cursor.getString(9),
+                        department = cursor.getString(10),
+                        address = cursor.getString(11),
+                        imageUri = cursor.getString(12)
+                    )
+                )
+            }
+        }
+        return list
+    }
+
+    fun deleteUserByUserId(userId: String): Boolean {
+        val db = writableDatabase
+        return db.delete(TABLE_USERS, "user_id = ?", arrayOf(userId)) > 0
+    }
+
+    fun upsertUserAccount(
+        userId: String,
+        name: String,
+        role: String,
+        course: String = "",
+        section: String = "",
+        position: String = "",
+        email: String = "",
+        password: String = "1234",
+        contactNum: String = "",
+        department: String = "",
+        address: String = "",
+        imageUri: String = ""
+    ): Boolean {
+        val db = writableDatabase
+        val finalDept = if (department.isNotBlank()) department else course
+        val values = ContentValues().apply {
+            put("user_id", userId)
+            put("name", name)
+            put("role", role.uppercase())
+            put("course", course)
+            put("section", section)
+            put("position", position)
+            put("email", email)
+            put("password", password)
+            put("contact_num", contactNum)
+            put("department", finalDept)
+            put("address", address)
+            put("image_uri", imageUri)
+        }
+        val rows = db.update(TABLE_USERS, values, "LOWER(user_id) = LOWER(?)", arrayOf(userId))
+
+        if (role.equals("FACULTY", ignoreCase = true)) {
+            val teacherValues = ContentValues().apply {
+                put("name", name)
+                if (email.isNotBlank()) put("email", email)
+                put("department", finalDept)
+                if (position.isNotBlank()) put("position", position)
+            }
+            db.update(TABLE_TEACHERS, teacherValues, "LOWER(teacher_id) = LOWER(?)", arrayOf(userId))
+        }
+
+        if (rows > 0) return true
+        val res = db.insertWithOnConflict(TABLE_USERS, null, values, SQLiteDatabase.CONFLICT_REPLACE)
+        return res != -1L
+    }
+
+    fun updateUserProfileImage(userId: String, imageUri: String): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("image_uri", imageUri)
+        }
+        return db.update(TABLE_USERS, values, "user_id = ?", arrayOf(userId)) > 0
     }
 }

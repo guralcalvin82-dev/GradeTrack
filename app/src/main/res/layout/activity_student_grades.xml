@@ -7,39 +7,19 @@
     android:background="@color/background"
     android:orientation="vertical">
 
-    <!-- Executive Header Section -->
+    <!-- Header -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary_dark"
         android:paddingHorizontal="24dp"
         android:paddingTop="32dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="18dp">
 
-        <!-- Transparent Back Action Button on the Left -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnBack"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_marginEnd="12dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:padding="0dp"
-            app:icon="@drawable/ic_arrow_back"
-            app:iconGravity="textStart"
-            app:iconTint="@android:color/white"
-            app:backgroundTint="@android:color/transparent"
-            app:rippleColor="#33FFFFFF"
-            tools:ignore="SpeakableTextPresentCheck" />
 
-        <!-- Header Title to the Right of the Back Button -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/btnBack"
             android:layout_centerVertical="true"
             android:orientation="vertical">
 
@@ -53,28 +33,29 @@
         </LinearLayout>
     </RelativeLayout>
 
-    <!-- Main Content Container -->
+    <!-- Main Content -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- Student Summary Header Card with Year Level Spinner -->
+        <!-- Student Summary Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/card_bg"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp">
+            app:cardBackgroundColor="@color/primary"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="4dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -87,7 +68,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Juan Dela Cruz"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@android:color/white"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -97,17 +78,18 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="BS Information Systems • BSIS 2C"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="@color/text_light"
                         android:textSize="13sp" />
                 </LinearLayout>
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Main Grade Sheet Card Container -->
+        <!-- Grade Sheet Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             app:cardBackgroundColor="@color/card_bg"
             app:cardCornerRadius="18dp"
             app:cardElevation="3dp">
@@ -118,7 +100,7 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
-                <!-- Semester Selector Buttons -->
+                <!-- Semester Buttons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -160,12 +142,12 @@
                         app:cornerRadius="10dp" />
                 </LinearLayout>
 
-                <!-- Scrollable Grades List Container -->
+                <!-- Grades list -->
                 <ScrollView
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_weight="1"
                     android:layout_marginVertical="8dp"
+                    android:layout_weight="1"
                     android:scrollbars="none"
                     tools:ignore="SpeakableTextPresentCheck">
 
@@ -173,10 +155,7 @@
                         android:id="@+id/layoutGradesContainer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
-                        <!-- Dynamically populated grade rows from database -->
-                    </LinearLayout>
-
+                        android:orientation="vertical" />
                 </ScrollView>
 
                 <View
@@ -185,7 +164,7 @@
                     android:layout_marginBottom="12dp"
                     android:background="@color/border_color" />
 
-                <!-- Grade Summary Footer Box -->
+                <!-- Summary footer -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -244,8 +223,134 @@
                 </LinearLayout>
 
             </LinearLayout>
-
         </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+    <!-- Bottom navigation bar -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border_color" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/card_bg"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <LinearLayout
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                app:tint="@color/text_secondary"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Home"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnMyGrades"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_grades"
+                app:tint="@color/primary"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Grades"
+                android:textColor="@color/primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnSchedule"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_schedule"
+                app:tint="@color/text_secondary"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Schedule"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnProfile"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_profile"
+                app:tint="@color/text_secondary"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Profile"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
     </LinearLayout>
 
 </LinearLayout>

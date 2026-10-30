@@ -62,18 +62,25 @@ class LoginActivity : AppCompatActivity() {
                 val role = cursor.getString(1) ?: "STUDENT"
                 val name = cursor.getString(2) ?: ""
 
-                val intent = if (role.equals("STUDENT", ignoreCase = true)) {
-                    Intent(this, StudentDashboardActivity::class.java)
-                        .putExtra("STUDENT_ID", actualUserId)
-                } else {
-                    Toast.makeText(
-                        this,
-                        "Welcome ${facultyTitle(actualUserId)} $name",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                    Intent(this, FacultyDashboardActivity::class.java)
-                        .putExtra("FACULTY_ID", actualUserId)
+                val intent = when {
+                    role.equals("ADMIN", ignoreCase = true) -> {
+                        Toast.makeText(this, "Welcome Admin $name", Toast.LENGTH_LONG).show()
+                        Intent(this, AdminDashboardActivity::class.java)
+                            .putExtra("ADMIN_ID", actualUserId)
+                    }
+                    role.equals("FACULTY", ignoreCase = true) -> {
+                        Toast.makeText(
+                            this,
+                            "Welcome ${facultyTitle(actualUserId)} $name",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        Intent(this, FacultyDashboardActivity::class.java)
+                            .putExtra("FACULTY_ID", actualUserId)
+                    }
+                    else -> {
+                        Intent(this, StudentDashboardActivity::class.java)
+                            .putExtra("STUDENT_ID", actualUserId)
+                    }
                 }
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)

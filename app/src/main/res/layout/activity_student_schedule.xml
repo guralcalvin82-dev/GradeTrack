@@ -7,40 +7,20 @@
     android:background="@color/background"
     android:orientation="vertical">
 
-    <!-- Executive Header Section -->
+    <!-- Header -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/primary_dark"
         android:paddingHorizontal="24dp"
         android:paddingTop="32dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="18dp">
 
-        <!-- Transparent Back Action Button on the Left -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnBack"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_marginEnd="12dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:padding="0dp"
-            app:icon="@drawable/ic_arrow_back"
-            app:iconGravity="textStart"
-            app:iconTint="@android:color/white"
-            app:backgroundTint="@android:color/transparent"
-            app:rippleColor="#33FFFFFF"
-            tools:ignore="SpeakableTextPresentCheck" />
 
-        <!-- Header Title to the Right of the Back Button -->
         <LinearLayout
             android:id="@+id/headerTitleContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/btnBack"
             android:layout_centerVertical="true"
             android:orientation="vertical">
 
@@ -55,21 +35,22 @@
         </LinearLayout>
     </RelativeLayout>
 
-    <!-- Main Content Container -->
+    <!-- Main Content -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- Info Summary Card -->
+        <!-- Course / Section Card (maroon, like the dashboard card) -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="@color/card_bg"
+            app:cardBackgroundColor="@color/primary"
             app:cardCornerRadius="18dp"
-            app:cardElevation="3dp">
+            app:cardElevation="4dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -88,10 +69,10 @@
                         android:id="@+id/tvStudentCourse"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_primary"
+                        android:text="BS Information Systems"
+                        android:textColor="@android:color/white"
                         android:textSize="15sp"
                         android:textStyle="bold"
-                        android:text="BS Information Systems"
                         tools:text="BS Information Systems" />
 
                     <TextView
@@ -99,16 +80,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp"
                         android:text="Section 2C"
+                        android:textColor="@color/text_light"
+                        android:textSize="13sp"
                         tools:text="Section 2C" />
                 </LinearLayout>
-
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Semester Selector Buttons -->
+        <!-- Semester Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -120,17 +100,18 @@
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:layout_weight="1"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:paddingVertical="12dp"
                 android:text="1ST SEMESTER"
-                android:textColor="@android:color/white"
+                android:textColor="@color/primary"
                 android:textSize="12sp"
                 android:textStyle="bold"
+                app:backgroundTint="@color/card_bg"
                 app:cornerRadius="14dp"
-                app:strokeColor="@color/primary_dark" />
+                app:strokeColor="@color/primary" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSem2"
@@ -143,14 +124,15 @@
                 android:insetBottom="0dp"
                 android:paddingVertical="12dp"
                 android:text="2ND SEMESTER"
-                android:textColor="@android:color/white"
+                android:textColor="@color/primary"
                 android:textSize="12sp"
                 android:textStyle="bold"
+                app:backgroundTint="@color/card_bg"
                 app:cornerRadius="14dp"
-                app:strokeColor="@color/primary_dark" />
+                app:strokeColor="@color/primary" />
         </LinearLayout>
 
-        <!-- Main Schedule Container -->
+        <!-- Schedule Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -165,7 +147,6 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
-                <!-- Section Sub-Header -->
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -184,7 +165,7 @@
                         android:textStyle="bold" />
                 </RelativeLayout>
 
-                <!-- Table Column Header Row: TIME | SUBJECT | COURSE | ROOM | ACTION -->
+                <!-- Column headers: TIME | SUBJECT | COURSE | ROOM -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -230,7 +211,6 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
-                <!-- Scrollable Table Body -->
                 <ScrollView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -241,13 +221,134 @@
                         android:id="@+id/tlSchedule"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:stretchColumns="0,1,2,3,4">
-                        <!-- Dynamically populated schedule rows should include padding and wrap content properly -->
-                    </TableLayout>
+                        android:stretchColumns="0,1,2,3,4" />
                 </ScrollView>
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+    <!-- Bottom navigation bar -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border_color" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/card_bg"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <LinearLayout
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                app:tint="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Home"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnMyGrades"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_grades"
+                app:tint="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Grades"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnSchedule"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_schedule"
+                app:tint="@color/primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Schedule"
+                android:textColor="@color/primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnProfile"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_profile"
+                app:tint="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Profile"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
     </LinearLayout>
 
 </LinearLayout>

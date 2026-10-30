@@ -24,21 +24,19 @@
         <!-- Dashboards -->
         <activity android:name=".StudentDashboardActivity" android:exported="false" />
         <activity android:name=".FacultyDashboardActivity" android:exported="false" />
+        <activity android:name=".AdminDashboardActivity" android:exported="false" />
 
         <!-- Faculty screens -->
         <activity android:name=".ManageScheduleActivity" android:exported="false" />
-        <!-- Add any others you have, e.g. ManageStudentsActivity,
-             ManageSubjectsActivity, ManageGradesActivity -->
+        <activity android:name=".GradeManagementActivity" android:exported="false" />
+        <activity android:name=".ManageStudentsActivity" android:exported="false" />
+        <activity android:name=".ManageSubjectsActivity" android:exported="false" />
+        <activity android:name=".FacultyProfileActivity" android:exported="false" />
 
         <!-- Student screens -->
         <activity android:name=".StudentGradesActivity" android:exported="false" />
         <activity android:name=".StudentScheduleActivity" android:exported="false" />
         <activity android:name=".StudentProfileActivity" android:exported="false" />
-
-        <!-- Faculty screens -->
-        <activity android:name=".GradeManagementActivity" android:exported="false" />
-        <activity android:name=".ManageStudentsActivity" android:exported="false" />
-        <activity android:name=".ManageSubjectsActivity" android:exported="false" />
     </application>
 
 </manifest>
